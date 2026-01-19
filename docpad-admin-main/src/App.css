@@ -1,0 +1,57 @@
+/* @import "tailwindcss" */
+
+select option{
+  color:black;
+}
+
+
+.image-adjust{
+  width: 700rem;
+}
+
+.action-menu{
+  border: 2px solid black;
+  z-index: 1000;
+  position: absolute;
+}
+
+/* FLOAT */
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* CLOUDS */
+.cloud {
+  position: absolute;
+  opacity: .6;
+  animation: cloudMove linear infinite;
+}
+.cloud.xl { font-size: 6rem; top: 18%; left: -20%; animation-duration: 90s; }
+.cloud.lg { font-size: 5rem; top: 35%; left: -25%; animation-duration: 70s; }
+.cloud.md { font-size: 4rem; top: 55%; left: -30%; animation-duration: 55s; }
+.cloud.sm { font-size: 3rem; top: 70%; left: -35%; animation-duration: 40s; }
+
+@keyframes cloudMove {
+  to { transform: translateX(140vw); }
+}
+
+/* WIND */
+.wind {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(56,189,248,.5), transparent);
+  animation: windMove linear infinite;
+}
+.w1 { top: 30%; animation-duration: 6s; }
+.w2 { top: 50%; animation-duration: 9s; }
+.w3 { top: 70%; animation-duration: 12s; }
+
+@keyframes windMove {
+  from { transform: translateX(-20%); }
+  to { transform: translateX(120vw); }
+}
