@@ -16,14 +16,23 @@ export const AuthProvider = ({ children }) => {
     } else {
       apiGet("/api/auth/user/")
         .then((res) => {
-          setUser(res.user);
-          localStorage.setItem("user", JSON.stringify(res.user));
+          if (res?.user) {
+            setUser(res.user);
+            localStorage.setItem("user", JSON.stringify(res.user));
+          } else {
+            setUser(null);
+            localStorage.removeItem("user");
+          }
         })
         .catch(() => {
           setUser(null);
-          localStorage.clear();
+          localStorage.removeItem("user");
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+        });
     }
   }, []);
 
