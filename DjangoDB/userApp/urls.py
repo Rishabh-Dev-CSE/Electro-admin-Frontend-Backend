@@ -7,4 +7,10 @@ urlpatterns = [
     path('users/list/', views.get_users),
     path("users/update/<int:pk>/", views.user_update),
     path("users/delete/<int:pk>/", views.user_delete),
+
+    path("reviews/submit/", views.submit_review),
+    path("reviews/product/<int:product_id>/", views.product_reviews),
+
+    path("admin/reviews/", views.admin_reviews),
+    path("admin/reviews/<int:id>/status/",views.update_review_status),
 ]

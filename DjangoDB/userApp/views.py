@@ -11,8 +11,6 @@ from django.utils.text import slugify
 from electricApp.models import *
 
 
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def auth_user(request):
@@ -145,3 +143,79 @@ def user_delete(request, pk):
 
     user.delete()
     return Response({"status": True, "message": "User deleted"})
+
+# ==================Reviews=======================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_review(request):
+    product_id = request.data.get("product")
+    rating = request.data.get("rating")
+    comment = request.data.get("comment")
+
+    if not rating or not comment:
+        return Response({"error": "Rating & comment required"}, status=400)
+
+    ProductReview.objects.create(
+        product_id=product_id,
+        user=request.user,
+        rating=rating,
+        comment=comment,
+        status="pending"
+    )
+
+    return Response({
+        "message": "Review submitted, waiting for approval"
+    })
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def admin_reviews(request):
+    if request.user.role != "admin":
+        return Response({"error": "Unauthorized"}, status=403)
+
+    reviews = ProductReview.objects.select_related("product", "user")
+
+    data = [{
+        "id": r.id,
+        "product": r.product.name,
+        "user": r.user.username,
+        "rating": r.rating,
+        "comment": r.comment,
+        "status": r.status
+    } for r in reviews]
+
+    return Response({"data": data})
+
+
+@api_view(["GET"])
+def product_reviews(request, product_id):
+    reviews = ProductReview.objects.filter(
+        product_id=product_id,
+        status="approved"
+    ).select_related("user")
+
+    data = [{
+        "user": r.user.username,
+        "rating": r.rating,
+        "comment": r.comment,
+        "date": r.created_at.strftime("%d %b %Y")
+    } for r in reviews]
+
+    return Response({
+        "count": len(data),
+        "reviews": data
+    })
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_review_status(request, id):
+    if request.user.role != "admin":
+        return Response({"error": "Unauthorized"}, status=403)
+
+    status_val = request.data.get("status")
+    review = ProductReview.objects.get(id=id)
+    review.status = status_val
+    review.save()
+
+    return Response({"message": "Review status updated"})

@@ -5,13 +5,14 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from reportlab.lib.pagesizes import A6
+from reportlab.lib.pagesizes import A6,A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from django.http import HttpResponse
 from reportlab.graphics.barcode import code128
 from reportlab.lib.utils import ImageReader
 import qrcode
+import csv
 import io
 import json
 import random
@@ -40,6 +41,7 @@ def loginUser(request):
     access = str(refresh.access_token)
 
     response = Response({
+        'message':"login successfully",
         "access": access,
         "user": {
             "id": user.id,
@@ -60,6 +62,27 @@ def loginUser(request):
 
     return response
 
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def signupUser(request):
+    print('hello')
+    username = request.data.get("username")
+    email = request.data.get("email")
+    password = request.data.get("password")
+
+    if not username or not password:
+        return Response({"error": "Required fields missing"}, status=400)
+
+    if CustomUser.objects.filter(username=username).exists():
+        return Response({"error": "Username already exists"}, status=400)
+
+    user = CustomUser.objects.create_user(
+        username=username,
+        email=email,
+        password=password
+    )
+
+    return Response({"message": "User created successfully"})
 
 # ---------- REFRESH ----------
 @api_view(['POST'])
@@ -75,19 +98,9 @@ def refresh_token_view(request):
     except Exception:
         return Response({"error": "Invalid refresh token"}, status=401)
 
-
-# ---------- TEST ----------
-@api_view(['GET'])
-def testApi(request):
-    return Response({"status": "Backend OK"})
-
-# ---------------get users----------------
-
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_users(request):
-
     
     if request.user.role != 'admin':
         return Response(
@@ -114,11 +127,17 @@ def get_users(request):
         "users": data
     })
 
-
 # ---------- CATEGORY ----------
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def add_category(request):
     name = request.data.get("name")
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     if not name:
         return Response(
             {"error": "Name required"},
@@ -130,8 +149,13 @@ def add_category(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def categories(request):
-    data = []
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
+    data = []
     for cat in Category.objects.all():
         data.append({
             "id": cat.id,
@@ -140,11 +164,9 @@ def categories(request):
 
     return Response({'data':data})
 
-
-
 @api_view(['GET', 'POST'])
 def add_subcategory(request):
-
+    
     # ---------- GET : list subcategories ----------
     if request.method == 'GET':
         data = []
@@ -162,6 +184,12 @@ def add_subcategory(request):
 
     # ---------- POST : add subcategory ----------
     if request.method == 'POST':
+        if request.user.role != "admin":
+          return Response(
+            {"error": " Admin allow Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
         name = request.data.get('name')
         category_id = request.data.get('category')
 
@@ -195,28 +223,43 @@ def add_subcategory(request):
             status=status.HTTP_201_CREATED
         )
 
-
 @api_view(["DELETE"])
 def delete_category(request, pk):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     try:
         Category.objects.get(id=pk).delete()
         return Response({"message": "Category deleted"})
     except Category.DoesNotExist:
         return Response({"error": "Category not found"}, status=404)
 
-
 @api_view(["DELETE"])
 def delete_subcategory(request, pk):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     try:
         Subcategory.objects.get(id=pk).delete()
         return Response({"message": "SubCategory deleted"})
     except Subcategory.DoesNotExist:
         return Response({"error": "SubCategory not found"}, status=404)
 
-
-
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def add_product(request):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     data = request.data
     images = request.FILES.getlist("images")
 
@@ -258,7 +301,7 @@ def add_product(request):
         # ---------- IMAGES (OPTIONAL MULTIPLE) ----------
 
         for i, img in enumerate(images):
-            # 👇 FIRST image = main product image
+            # FIRST image = main product image
             if i == 0:
                 product.image = img
                 product.save(update_fields=["image"])
@@ -290,12 +333,15 @@ def add_product(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
   
-  
-
 @api_view(["GET"])
 def products_list(request):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
     products = Product.objects.select_related("category").all().order_by("-id")
-
     data = []
     for p in products:
         data.append({
@@ -359,20 +405,19 @@ def product_update(request, pk):
         return Response({"message": "Only admin can update"})
     product = get_object_or_404(Product, pk = pk )
     
-
 @api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 def delete_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.delete()
 
     return Response({"message": "Product deleted successfully"})
 
-
 def generate_order_id():
     return f"ORD{random.randint(100000000, 9999999999)}"
 
-
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def create_order(request):
     user = request.user  
 
@@ -420,9 +465,14 @@ def create_order(request):
         status=status.HTTP_201_CREATED
     )
 
-
 @api_view(["GET"])
 def admin_orders(request):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     orders = Order.objects.all().order_by("-created_at")
 
     data = []
@@ -462,7 +512,14 @@ def admin_orders(request):
     return Response({"data": data})
 
 @api_view(["PUT"])
+@permission_classes([IsAuthenticated])
 def update_order_status(request, id):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     status = request.data.get("status")
     print(status)
     order = Order.objects.get(id=id)
@@ -472,10 +529,14 @@ def update_order_status(request, id):
 
     return Response({"message": "Order status updated"})
 
-
 @api_view(["GET"])
 def admin_order_detail(request, id):
     order = Order.objects.get(id=id)
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     return Response({
         "order_id": order.order_id,
@@ -495,11 +556,9 @@ def admin_order_detail(request, id):
         ]
     })
 
-    
-    
-
 @api_view(["GET"])
 def download_parcel_label(request, id):
+
     order = Order.objects.get(id=id)
     items = OrderItem.objects.filter(order=order)
 
@@ -581,80 +640,63 @@ def download_parcel_label(request, id):
 
     return response
 
-
-
-
-
 @api_view(["GET"])
-def reports_dashboard(request):
-    today = now().date()
-    start_of_week = today - timedelta(days=today.weekday())
+def accounting_dashboard(request):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    delivered = Order.objects.filter(order_status="Delivered")
+    month = request.GET.get("month")
+    year = request.GET.get("year")
 
-    gross_sales = delivered.aggregate(
+    orders = Order.objects.filter(order_status="Delivered")
+
+    if month and year:
+        orders = orders.filter(
+            created_at__month=int(month),
+            created_at__year=int(year),
+        )
+
+    gross_sales = orders.aggregate(
         total=Sum("total_amount")
-    )["total"] or Decimal("0.00")
+    )["total"] or Decimal("0")
 
-    # ✅ Decimal math (NO float)
     discount = gross_sales * Decimal("0.05")
     tax = gross_sales * Decimal("0.12")
     net_profit = gross_sales - discount - tax
 
-    # ===== MONTHLY SALES =====
-    monthly_labels = []
-    monthly_data = []
+    # ===== Monthly Profit (last 6 months) =====
+    labels, data = [], []
+    today = now().date()
 
     for i in range(5, -1, -1):
-        month = today.replace(day=1) - timedelta(days=i * 30)
-
+        month_date = today.replace(day=1) - timedelta(days=i * 30)
         total = Order.objects.filter(
             order_status="Delivered",
-            created_at__year=month.year,
-            created_at__month=month.month,
+            created_at__year=month_date.year,
+            created_at__month=month_date.month,
         ).aggregate(Sum("total_amount"))["total_amount__sum"] or Decimal("0")
 
-        monthly_labels.append(month.strftime("%b"))
-        monthly_data.append(float(total))  # frontend ke liye float
-
-    # ===== WEEKLY REVENUE =====
-    weekly_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    weekly_data = []
-
-    for i in range(7):
-        day = start_of_week + timedelta(days=i)
-        total = Order.objects.filter(
-            order_status="Delivered",
-            created_at__date=day,
-        ).aggregate(Sum("total_amount"))["total_amount__sum"] or Decimal("0")
-
-        weekly_data.append(float(total))
+        labels.append(month_date.strftime("%b"))
+        data.append(float(total))
 
     return Response({
         "kpis": {
             "gross_sales": float(gross_sales),
-            "net_profit": float(net_profit),
             "discount": float(discount),
             "tax": float(tax),
+            "net_profit": float(net_profit),
         },
-        "monthly_sales": {
-            "labels": monthly_labels,
-            "data": monthly_data,
-        },
-        "weekly_revenue": {
-            "labels": weekly_labels,
-            "data": weekly_data,
-        },
+        "monthly_profit": {
+            "labels": labels,
+            "data": data,
+        }
     })
 
-
-import csv
-
 @api_view(["GET"])
-def export_sales_csv(request):
-    """
-    /api/reports/export-csv/?month=1&year=2026
-    """
+def accounting_export_csv(request):
     month = request.GET.get("month")
     year = request.GET.get("year")
 
@@ -667,28 +709,261 @@ def export_sales_csv(request):
         )
 
     response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = (
-        f'attachment; filename="sales_report_{month or "all"}_{year or ""}.csv"'
-    )
+    response["Content-Disposition"] = 'attachment; filename="accounting_report.csv"'
 
     writer = csv.writer(response)
     writer.writerow([
         "Order ID",
-        "Customer",
-        "Email",
-        "Total Amount",
-        "Payment Status",
         "Date",
+        "Customer",
+        "Gross Amount",
+        "Discount (5%)",
+        "Tax (12%)",
+        "Net Amount",
+        "Payment Status",
     ])
 
     for o in orders:
+        discount = o.total_amount * Decimal("0.05")
+        tax = o.total_amount * Decimal("0.12")
+        net = o.total_amount - discount - tax
+
         writer.writerow([
             o.order_id,
-            o.customer_name,
-            o.customer_email,
-            float(o.total_amount),
-            o.payment_status,
             o.created_at.strftime("%d-%m-%Y"),
+            o.customer_name,
+            float(o.total_amount),
+            float(discount),
+            float(tax),
+            float(net),
+            o.payment_status,
         ])
 
     return response
+
+@api_view(["GET"])
+def accounting_export_pdf(request):
+    orders = Order.objects.filter(order_status="Delivered")
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="accounting_report.pdf"'
+
+    c = canvas.Canvas(response, pagesize=A4)
+    width, height = A4
+
+    y = height - 50
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, y, "Accounting Report")
+
+    y -= 40
+    c.setFont("Helvetica", 11)
+
+    total = orders.aggregate(Sum("total_amount"))["total_amount__sum"] or Decimal("0")
+    discount = total * Decimal("0.05")
+    tax = total * Decimal("0.12")
+    net = total - discount - tax
+
+    lines = [
+        f"Gross Sales: ₹{float(total)}",
+        f"Discount (5%): ₹{float(discount)}",
+        f"Tax (12%): ₹{float(tax)}",
+        f"Net Profit: ₹{float(net)}",
+    ]
+
+    for line in lines:
+        c.drawString(50, y, line)
+        y -= 20
+
+    c.showPage()
+    c.save()
+    return response
+
+@api_view(["GET"])
+def orders_dashboard(request):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    month = request.GET.get("month")
+    year = request.GET.get("year")
+
+    orders = Order.objects.all()
+
+    if month and year:
+        orders = orders.filter(
+            created_at__month=int(month),
+            created_at__year=int(year),
+        )
+
+    # ===== KPIs =====
+    kpis = {
+        "total_orders": orders.count(),
+        "delivered": orders.filter(order_status="Delivered").count(),
+        "cancelled": orders.filter(order_status="Cancelled").count(),
+        "pending": orders.filter(order_status="Pending").count(),
+    }
+
+    # ===== Daily Sales =====
+    daily = (
+        orders.filter(order_status="Delivered")
+        .values("created_at__date")
+        .annotate(total=Sum("total_amount"))
+        .order_by("created_at__date")
+    )
+
+    daily_labels = [d["created_at__date"].strftime("%d %b") for d in daily]
+    daily_data = [float(d["total"]) for d in daily]
+
+    # ===== Product-wise =====
+    products = (
+        OrderItem.objects
+        .values("product_name")
+        .annotate(qty=Sum("quantity"))
+        .order_by("-qty")[:5]
+    )
+
+    return Response({
+        "kpis": kpis,
+        "daily_sales": {
+            "labels": daily_labels,
+            "data": daily_data,
+        },
+        "top_products": list(products),
+    })
+
+@api_view(["GET"])
+def orders_export_csv(request):
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="orders_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "Order ID",
+        "Date",
+        "Customer",
+        "Product",
+        "Quantity",
+        "Order Status",
+        "Amount",
+    ])
+
+    for order in Order.objects.all():
+        for item in order.items.all():
+            writer.writerow([
+                order.order_id,
+                order.created_at.strftime("%d-%m-%Y"),
+                order.customer_name,
+                item.product_name,
+                item.quantity,
+                order.order_status,
+                float(order.total_amount),
+            ])
+
+    return response
+
+@api_view(["GET"])
+def orders_export_pdf(request):
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="orders_report.pdf"'
+
+    c = canvas.Canvas(response, pagesize=A4)
+    width, height = A4
+
+    y = height - 40
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, y, "Orders Report")
+
+    y -= 30
+    c.setFont("Helvetica", 11)
+
+    statuses = ["Pending", "Delivered", "Cancelled"]
+
+    for s in statuses:
+        count = Order.objects.filter(order_status=s).count()
+        c.drawString(50, y, f"{s} Orders: {count}")
+        y -= 20
+
+    c.showPage()
+    c.save()
+    return response
+
+@api_view(["GET"])
+def dashboard_overview(request):
+    today = now().date()
+    start_of_week = today - timedelta(days=6)
+
+    # ================= TOTAL COUNTS =================
+    total_orders = Order.objects.count()
+
+    total_sales = (
+        Order.objects
+        .filter(order_status="Delivered")
+        .aggregate(total=Sum("total_amount"))["total"]
+        or Decimal("0.00")
+    )
+
+    total_customers = CustomUser.objects.filter(role="customer").count()
+    total_products = Product.objects.count()
+
+    low_stock_count = Product.objects.filter(stock__lte=10).count()
+
+    # ================= RECENT ORDERS =================
+    recent_orders_qs = Order.objects.order_by("-created_at")[:5]
+
+    recent_orders = []
+    for o in recent_orders_qs:
+        recent_orders.append({
+            "order_id": o.order_id,
+            "customer": o.customer_name,
+            "amount": float(o.total_amount),
+            "status": o.order_status,
+        })
+
+    # ================= LOW STOCK PRODUCTS =================
+    low_stock_products = []
+    for p in Product.objects.filter(stock__lte=10)[:5]:
+        low_stock_products.append({
+            "name": p.name,
+            "stock": p.stock,
+        })
+
+    # ================= WEEKLY SALES CHART =================
+    chart_labels = []
+    chart_data = []
+
+    for i in range(7):
+        day = start_of_week + timedelta(days=i)
+
+        total = (
+            Order.objects
+            .filter(
+                order_status="Delivered",
+                created_at__date=day
+            )
+            .aggregate(total=Sum("total_amount"))["total"]
+            or Decimal("0.00")
+        )
+
+        chart_labels.append(day.strftime("%a"))  # Mon Tue Wed
+        chart_data.append(float(total))
+
+    # ================= RESPONSE =================
+    return Response({
+        "stats": {
+            "total_orders": total_orders,
+            "total_sales": float(total_sales),
+            "customers": total_customers,
+            "products": total_products,
+            "low_stock": low_stock_count,
+        },
+
+        "chart": {
+            "labels": chart_labels,
+            "data": chart_data,
+        },
+
+        "recent_orders": recent_orders,
+        "low_stock_products": low_stock_products,
+    })

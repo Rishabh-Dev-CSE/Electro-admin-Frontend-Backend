@@ -2,9 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("login/", views.loginUser),
     path("token/refresh/", views.refresh_token_view),
-    path("check/", views.testApi),
+    path("login/", views.loginUser),
+    path("signup/", views.signupUser),
 
     path('categories/', views.categories),
     path("add/category/", views.add_category),
@@ -18,15 +18,19 @@ urlpatterns = [
     path("products/add/", views.add_product),
     path("products/<int:pk>/", views.product_detail),
     path("products/delete/<int:pk>/", views.delete_product),
-    # path("product/update/", views.product_update),
-
+   
     path("orders/create/", views.create_order),
     path("orders/", views.admin_orders),
     path("orders/<int:id>/", views.admin_order_detail),
     path("orders/<int:id>/status/", views.update_order_status),
     path("orders/<int:id>/parcel-label/", views.download_parcel_label),
 
-    path("reports/export-csv/", views.export_sales_csv),
-    path("reports/dashboard/", views.reports_dashboard),
+    path("dashboard/overview/", views.dashboard_overview),
+    path("reports/accounting/dashboard/", views.accounting_dashboard),
+    path("reports/accounting/export-csv/", views.accounting_export_csv),
+    path("reports/accounting/export-pdf/", views.accounting_export_pdf),
+    path("reports/orders/dashboard/", views.orders_dashboard),
+    path("reports/orders/export-csv/", views.orders_export_csv),
+    path("reports/orders/export-pdf/", views.orders_export_pdf),
 
 ]
