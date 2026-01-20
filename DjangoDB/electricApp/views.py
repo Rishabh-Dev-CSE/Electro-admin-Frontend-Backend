@@ -145,7 +145,7 @@ def add_category(request):
         )
     Category.objects.create(name=name)
     return Response({"message": f"{name} Category added"})
-
+ 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def categories(request):
