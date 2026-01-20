@@ -140,7 +140,7 @@ export default function Categories() {
 
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 space-y-8">
+    <div className="min-h-screen text-black space-y-8">
       {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold text-gray-800">Categories</h1>

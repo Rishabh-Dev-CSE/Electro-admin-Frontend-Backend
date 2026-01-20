@@ -137,11 +137,11 @@ export default function AddProduct() {
 
   /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-[#f4f6f8] px-8 py-10">
+    <div className="min-h-screen text-black py-10">
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <h1 className="text-3xl font-bold mb-6">Add New Product</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-500">Add New Product</h1>
 
         <div className="grid grid-cols-12 gap-8">
 
