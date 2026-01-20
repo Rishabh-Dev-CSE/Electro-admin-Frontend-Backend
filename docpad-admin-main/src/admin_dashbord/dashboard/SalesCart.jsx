@@ -18,13 +18,13 @@ ChartJS.register(
   Legend
 );
 
-export default function SalesChart() {
+export default function SalesChart({ chart }) {
   const data = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    labels: chart.labels,
     datasets: [
       {
         label: "Sales (₹)",
-        data: [12000, 19000, 14000, 22000, 26000, 31000, 28000],
+        data: chart.data,
         borderColor: "#2563eb",
         backgroundColor: "rgba(37,99,235,0.15)",
         fill: true,
@@ -35,11 +35,18 @@ export default function SalesChart() {
   };
 
   const options = {
+    responsive: true,
     plugins: {
       legend: { display: false },
     },
     scales: {
       y: {
+        beginAtZero: false,
+        min: 1000,                // 🔥 100 se start
+        ticks: {
+          stepSize: 100,
+          callback: (v) => `₹${v}`,
+        },
         grid: { color: "#e5e7eb" },
       },
       x: {
@@ -50,11 +57,11 @@ export default function SalesChart() {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-700">
+      <div className="flex justify-between mb-4">
+        <h2 className="text-lg font-semibold text-gray-200">
           Weekly Sales Analytics
         </h2>
-        <span className="text-sm text-gray-500">Last 7 Days</span>
+        <span className="text-sm text-gray-400">Last 7 Days</span>
       </div>
 
       <Line data={data} options={options} />
