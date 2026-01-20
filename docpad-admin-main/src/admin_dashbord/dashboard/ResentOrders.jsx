@@ -1,16 +1,12 @@
-export default function RecentOrders() {
-  const orders = [
-    { id: "#1023", name: "Rahul Sharma", amount: "₹4,200", status: "Delivered" },
-    { id: "#1024", name: "Amit Verma", amount: "₹1,250", status: "Pending" },
-    { id: "#1025", name: "Sneha Patel", amount: "₹9,800", status: "Shipped" },
-  ];
-
+export default function RecentOrders({ orders }) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6">
-      <h3 className="font-semibold text-gray-700 mb-4">Recent Orders</h3>
+      <h3 className="font-semibold text-gray-700 mb-4">
+        Recent Orders
+      </h3>
 
       <table className="w-full text-sm">
-        <thead className="text-gray-500 border-b">
+        <thead className="border-b text-gray-500">
           <tr>
             <th className="text-left py-2">Order</th>
             <th className="text-left">Customer</th>
@@ -20,14 +16,11 @@ export default function RecentOrders() {
         </thead>
 
         <tbody>
-          {orders.map((o) => (
-            <tr
-              key={o.id}
-              className="border-b last:border-none hover:bg-gray-50 transition"
-            >
-              <td className="py-3 font-medium">{o.id}</td>
-              <td>{o.name}</td>
-              <td className="font-semibold">{o.amount}</td>
+          {orders.map((o, i) => (
+            <tr key={i} className="border-b last:border-none">
+              <td className="py-3 font-medium">#{o.order_id}</td>
+              <td>{o.customer}</td>
+              <td className="font-semibold">₹{o.amount}</td>
               <td>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold
@@ -36,7 +29,9 @@ export default function RecentOrders() {
                         ? "bg-green-100 text-green-700"
                         : o.status === "Shipped"
                         ? "bg-blue-100 text-blue-700"
-                        : "bg-yellow-100 text-yellow-700"
+                        : o.status === "Pending"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-red-100 text-red-700"
                     }`}
                 >
                   {o.status}

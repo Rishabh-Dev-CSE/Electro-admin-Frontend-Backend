@@ -55,3 +55,7 @@ select option{
   from { transform: translateX(-20%); }
   to { transform: translateX(120vw); }
 }
+
+.stat-card{
+  display: flex;
+}

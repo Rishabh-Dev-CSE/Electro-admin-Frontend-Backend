@@ -52,10 +52,10 @@ export default function OrdersLayout() {
   ).length;
 
   return (
-    <div className="w-full bg-gray-100 min-h-screen p-4">
+    <div className="text-black min-h-screen">
 
       {/* ================= STATS ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6 stat-card">
         <StatCard
           title="Total Orders"
           value={totalOrders}
@@ -90,9 +90,16 @@ export default function OrdersLayout() {
           icon="❌"
           type="cancelled"
         />
+
+        <StatCard
+          title="Delivered"
+          value={deliveredCount}
+          icon="✔️"
+          type="delivered"
+        />
       </div>
 
-      <h1 className="text-2xl font-bold mb-4">Orders</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-500">Orders</h1>
 
       {/* ================= TOP TABS ================= */}
       <div className="flex gap-6 border-b bg-white px-4 rounded-t-xl">
