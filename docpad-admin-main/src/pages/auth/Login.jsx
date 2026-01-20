@@ -1,141 +1,249 @@
-import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Navbar from "../navbar/navbar";
-import { AuthContext } from "../../module/content/AuthContext";
-import { signInWithGoogle } from "./firebase/firebase";  // <-- GOOGLE LOGIN IMPORT
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { apiPost } from "../../utils/api";
+import { useNavigate } from "react-router-dom";
 
-const BASE_URL = "http://127.0.0.1:8000";
-
-function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const { setUser } = useContext(AuthContext);
+export default function Login() {
   const navigate = useNavigate();
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Handle normal login
-  const handleLogin = async (e) => {
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
-      const res = await fetch(`${BASE_URL}/api/login/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // 🔥 REQUIRED for cookies
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        return alert(data.error || "Invalid Credentials");
-      }
-
-      // ✅ Save access token
-      localStorage.setItem("access", data.access);
-
-      // ✅ Save user properly
-      const userData = {
-        id: data.user.id,
-        username: data.user.username,
-        is_staff: data.user.is_staff,
-      };
-
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      navigate("/admin");
+      const res = await apiPost("/api/login/", form);
+      alert(res.message)
+      localStorage.setItem("access", res.access);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      navigate(res.user.is_staff ? "/admin/dashboard" : "/");
     } catch (err) {
-      console.error(err);
-      alert("Network Error");
+      setError(err.error || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
-
-  // Google Login Integration
-  const handleGoogleLogin = async () => {
-    try {
-      const user = await signInWithGoogle();
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/admin");
-    } catch {
-      alert("Google Login Failed");
-    }
-  };
-
   return (
-    <>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-slate-100 to-indigo-100 px-4">
 
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2"
+      >
 
-      <div className="min-h-screen flex items-center justify-center 
-          bg-gradient-to-br from-[#00152E] via-[#002B57] to-[#01396B] relative overflow-hidden">
+        {/* ================= LEFT BRAND ================= */}
+        <div className="relative hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 to-indigo-800 text-white">
 
-        <div className="absolute top-[-12rem] left-[-12rem] w-[430px] h-[430px] bg-blue-600/30 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-12rem] right-[-12rem] w-[430px] h-[430px] bg-cyan-600/30 rounded-full blur-[150px]" />
+          {/* Decorative blobs */}
+          <div className="absolute w-60 h-60 bg-white/10 rounded-full -top-20 -left-20" />
+          <div className="absolute w-48 h-48 bg-white/10 rounded-full bottom-10 right-10" />
 
-        <div className="relative w-full max-w-md px-8 py-10 bg-white/10 backdrop-blur-lg 
-                        rounded-3xl border border-white/20 shadow-xl">
+          <img
+            src="/logo.jpeg"
+            alt="Logo"
+            className="w-20 h-20 object-contain mb-6 bg-white rounded-2xl p-3"
+          />
+            {/* SVG  */}
+          <h2 className="text-4xl font-bold tracking-wide">
+            <svg width="380" height="120" viewBox="0 0 380 120" xmlns="http://www.w3.org/2000/svg">
 
-          <h2 className="text-3xl font-bold text-white text-center mb-6">Login</h2>
+           
+              <ellipse cx="64" cy="96" rx="40" ry="10" fill="#00000035" />
 
-          <form onSubmit={handleLogin} className="flex flex-col space-y-6">
+           
+              <rect x="20" y="20" width="88" height="88" rx="20" fill="url(#chipOuter)" />
 
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username / Email"
-              className="px-4 py-3 bg-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
+          
+              <rect x="30" y="30" width="68" height="68" rx="16" fill="url(#chipInner)" />
 
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="px-4 py-3 bg-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-400"
-              required
-            />
+              <g stroke="#38BDF8" stroke-width="3" stroke-linecap="round">
+                <line x1="12" y1="36" x2="20" y2="36" />
+                <line x1="12" y1="58" x2="20" y2="58" />
+                <line x1="12" y1="80" x2="20" y2="80" />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`py-3 rounded-xl text-lg font-semibold bg-gradient-to-r 
-                from-blue-600 to-purple-600 text-white transition ${loading ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.03]"
-                }`}
-            >
-              {loading ? "Authenticating..." : "Login"}
-            </button>
-          </form>
+                <line x1="108" y1="36" x2="116" y2="36" />
+                <line x1="108" y1="58" x2="116" y2="58" />
+                <line x1="108" y1="80" x2="116" y2="80" />
+              </g>
 
-          <div className="flex items-center my-6 gap-4">
-            <div className="flex-1 h-[1px] bg-white/20"></div>
-            <span className="text-gray-300 text-sm">OR</span>
-            <div className="flex-1 h-[1px] bg-white/20"></div>
-          </div>
+            
+              <g stroke="#2DD4BF" stroke-width="3" fill="none" stroke-linecap="round">
+                <path d="M54 56 H72 V40">
+                  <animate
+                    attributeName="stroke-dasharray"
+                    from="0,100"
+                    to="100,0"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <circle cx="72" cy="38" r="3" fill="#2DD4BF">
+                  <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
+                </circle>
 
-          {/* FIREBASE BUTTON */}
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full py-3 rounded-xl bg-white text-gray-900 font-semibold 
-                      hover:bg-gray-200 transition flex items-center justify-center gap-3"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5" />
-            Continue with Google
-          </button>
+                <path d="M54 70 H82 V88">
+                  <animate
+                    attributeName="stroke-dasharray"
+                    from="0,100"
+                    to="100,0"
+                    dur="1.5s"
+                    begin="0.3s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <circle cx="82" cy="90" r="3" fill="#38BDF8">
+                  <animate attributeName="opacity" values="0;1;0" dur="1.5s" begin="0.3s" repeatCount="indefinite" />
+                </circle>
+              </g>
 
-          <p className="text-center text-gray-300 mt-6 text-sm">
-            New User? <Link to="/auth/signup" className="text-blue-400 underline">Create Account</Link>
+              <rect x="20" y="20" width="88" height="88" rx="20" fill="url(#chipGlow)">
+                <animate attributeName="opacity" values="0.4;0.7;0.4" dur="2s" repeatCount="indefinite" />
+              </rect>
+
+              <text x="140" y="54" font-size="30" font-weight="900" fill="#020617" letter-spacing="1">
+                PARTS
+              </text>
+              <text x="140" y="84" font-size="30" font-weight="900" fill="url(#textGrad)" letter-spacing="1">
+                ARTHKARYA
+              </text>
+
+           
+              <text x="140" y="104" font-size="11" fill="#64748B" letter-spacing="1.2">
+                POWERING ELECTRONICS
+              </text>
+
+           
+              <defs>
+
+                <linearGradient id="chipOuter" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#020617" />
+                  <stop offset="100%" stop-color="#1E1B4B" />
+                </linearGradient>
+
+                <linearGradient id="chipInner" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#4F46E5" />
+                  <stop offset="100%" stop-color="#312E81" />
+                </linearGradient>
+
+                <radialGradient id="chipGlow">
+                  <stop offset="0%" stop-color="#38BDF850" />
+                  <stop offset="100%" stop-color="#00000000" />
+                </radialGradient>
+
+                <linearGradient id="textGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#4F46E5" />
+                  <stop offset="100%" stop-color="#22D3EE" />
+                </linearGradient>
+
+              </defs>
+            </svg>
+
+          </h2>
+
+          <p className="mt-4 text-sm text-indigo-100 max-w-xs text-center">
+            Secure inventory & order management system
           </p>
         </div>
-      </div>
-    </>
+
+        {/* ================= RIGHT LOGIN ================= */}
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="p-8 sm:p-12 flex flex-col justify-center"
+        >
+
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Login Admin Dashboard
+          </h2>
+          <p className="text-sm text-gray-500 mb-8">
+            Login to continue to your account
+          </p>
+
+          {error && (
+            <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+              {error}
+            </div>
+          )}
+
+          {/* USERNAME */}
+          <div className="mb-6">
+            <label className="text-sm font-medium text-gray-600">
+              Username
+            </label>
+            <input
+              name="username"
+              onChange={handleChange}
+              required
+              placeholder="Enter your username"
+              className="
+                mt-2 w-full px-4 py-3 rounded-xl
+                border border-gray-300
+                focus:ring-2 focus:ring-indigo-500
+                focus:border-indigo-500
+                outline-none transition
+              "
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div className="mb-8">
+            <label className="text-sm font-medium text-gray-600">
+              Password
+            </label>
+            <input
+              type="password"
+              name="password"
+              onChange={handleChange}
+              required
+              placeholder="••••••••"
+              className="
+                mt-2 w-full px-4 py-3 rounded-xl
+                border border-gray-300
+                focus:ring-2 focus:ring-indigo-500
+                focus:border-indigo-500
+                outline-none transition
+              "
+            />
+          </div>
+
+          {/* BUTTON */}
+          <button
+            disabled={loading}
+            className="
+              w-full py-3 rounded-xl
+              bg-indigo-600 text-white font-semibold
+              hover:bg-indigo-700
+              active:scale-[0.98]
+              transition
+            "
+          >
+            {loading ? "Logging in..." : "Log in"}
+          </button>
+          
+          {/* FOOTER */}
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Don't have an account?{" "}
+            <span
+              onClick={() => navigate("/auth/signup")}
+              className="text-indigo-600 cursor-pointer font-medium"
+            >
+              Signup
+            </span>
+          </p>
+
+        </motion.form>
+      </motion.div>
+    </div>
   );
 }
-
-export default Login;
