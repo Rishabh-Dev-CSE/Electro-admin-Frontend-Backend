@@ -1,146 +1,111 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiGet, apiUpdate } from "../../utils/api";
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      product: "Men T-Shirt",
-      user: "Amit",
-      rating: 4,
-      comment: "Good quality product",
-      status: "pending",
-    },
-    {
-      id: 2,
-      product: "Running Shoes",
-      user: "Ravi",
-      rating: 5,
-      comment: "Excellent, very comfortable",
-      status: "approved",
-    },
-  ]);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
 
-  const updateStatus = (id, status) => {
-    setReviews(
-      reviews.map((r) =>
-        r.id === id ? { ...r, status } : r
-      )
-    );
+  /* ================= FETCH REVIEWS ================= */
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      const res = await apiGet("/api/admin/reviews/");
+
+      // 🔥 FILTER: only pending & rejected
+      const filtered = (res.data || []).filter(
+        r => r.status !== "approved"
+      );
+
+      setReviews(filtered);
+    } catch (err) {
+      console.error("Failed to fetch reviews", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+
+  /* ================= UPDATE STATUS ================= */
+  const updateStatus = async (id, status) => {
+    try {
+      setUpdatingId(id);
+
+      await apiUpdate(`/api/admin/reviews/${id}/status/`, { status });
+
+      // 🔥 Remove review after approve / reject
+      setReviews(prev => prev.filter(r => r.id !== id));
+
+    } catch (err) {
+      console.error("Failed to update status", err);
+      fetchReviews(); // fallback
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-8 space-y-6">
+    <div className="bg-white rounded-xl shadow p-6 text-black">
+      <h2 className="text-xl font-bold mb-4">Product Reviews</h2>
 
-      {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800">
-          Product Reviews
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Moderate and manage customer feedback
-        </p>
-      </div>
-
-      {/* TABLE CARD */}
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100 text-gray-600">
-            <tr>
-              <th className="p-4 text-left font-semibold">Product</th>
-              <th className="text-left font-semibold">User</th>
-              <th className="text-left font-semibold">Rating</th>
-              <th className="text-left font-semibold">Review</th>
-              <th className="text-left font-semibold">Status</th>
-              <th className="text-center font-semibold w-40">Action</th>
+      {loading ? (
+        <p className="text-gray-500">Loading reviews...</p>
+      ) : (
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-gray-100 text-left">
+              <th className="p-2">Product</th>
+              <th className="p-2">User</th>
+              <th className="p-2">Rating</th>
+              <th className="p-2">Comment</th>
+              <th className="p-2">Status</th>
+              <th className="p-2">Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {reviews.length > 0 ? (
-              reviews.map((review) => (
-                <tr
-                  key={review.id}
-                  className="border-b last:border-none hover:bg-gray-50 transition"
-                >
-                  <td className="p-4 font-medium text-gray-800">
-                    {review.product}
+            {reviews.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="p-4 text-center text-gray-500">
+                  No pending reviews 🎉
+                </td>
+              </tr>
+            ) : (
+              reviews.map(r => (
+                <tr key={r.id} className="border-t">
+                  <td className="p-2">{r.product}</td>
+                  <td className="p-2">{r.user}</td>
+                  <td className="p-2 text-yellow-500">
+                    {"★".repeat(r.rating)}
                   </td>
-
-                  <td className="text-gray-700">{review.user}</td>
-
-                  {/* RATING */}
-                  <td>
-                    <div className="flex gap-1 text-yellow-400">
-                      {"★".repeat(review.rating)}
-                      <span className="text-gray-300">
-                        {"★".repeat(5 - review.rating)}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td className="text-gray-600 max-w-sm">
-                    {review.comment}
-                  </td>
-
-                  {/* STATUS */}
-                  <td>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold capitalize
-                        ${
-                          review.status === "approved"
-                            ? "bg-green-100 text-green-700"
-                            : review.status === "rejected"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                    >
-                      {review.status}
-                    </span>
-                  </td>
-
-                  {/* ACTIONS */}
-                  <td className="text-center space-x-2">
+                  <td className="p-2">{r.comment}</td>
+                  <td className="p-2 capitalize">{r.status}</td>
+                  <td className="p-2 space-x-2">
                     <button
-                      onClick={() =>
-                        updateStatus(review.id, "approved")
-                      }
-                      disabled={review.status === "approved"}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold
-                                 bg-green-600 text-white hover:bg-green-700
-                                 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      disabled={updatingId === r.id}
+                      onClick={() => updateStatus(r.id, "approved")}
+                      className="px-3 py-1 rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
                     >
                       Approve
                     </button>
 
                     <button
-                      onClick={() =>
-                        updateStatus(review.id, "rejected")
-                      }
-                      disabled={review.status === "rejected"}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold
-                                 bg-red-600 text-white hover:bg-red-700
-                                 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                      disabled={updatingId === r.id}
+                      onClick={() => updateStatus(r.id, "rejected")}
+                      className="px-3 py-1 rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
                     >
                       Reject
                     </button>
                   </td>
                 </tr>
               ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="6"
-                  className="text-center p-6 text-gray-500"
-                >
-                  No reviews found
-                </td>
-              </tr>
             )}
           </tbody>
         </table>
-
-      </div>
+      )}
     </div>
   );
 }

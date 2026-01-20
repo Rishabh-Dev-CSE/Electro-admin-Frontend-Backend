@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiDelete, apiPostForm, apiUpdate } from "../../utils/api";
+import StatCard from "../dashboard/StatCard";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -30,6 +31,13 @@ export default function Users() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  
+  /* ================= STATS ================= */
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.is_active).length;
+  const blockedUsers = users.filter(u => !u.is_active).length;
+
 
   /* ================= FILTER ================= */
   const filtered = users.filter(u =>
@@ -103,7 +111,14 @@ export default function Users() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen space-y-6">
+    <div className="space-y-6">
+
+    {/* ================= STATS ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard title="Total Users" value={totalUsers} icon="👥" type="pending" />
+        <StatCard title="Active Users" value={activeUsers} icon="✅" type="delivered"/>
+        <StatCard title="Blocked Users" value={blockedUsers} icon="🚫" type="cancelled" />
+      </div>
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
@@ -143,7 +158,7 @@ export default function Users() {
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="text-black">
             {filtered.map(u => (
               <tr key={u.id} className="border-b relative">
                 <td className="p-2">
@@ -262,7 +277,7 @@ export default function Users() {
 /* ================= MODAL COMPONENT ================= */
 function UserModal({ title, form, setForm, onClose, onSave }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/40  text-black flex items-center justify-center">
       <div className="bg-white w-96 p-6 rounded-xl space-y-4">
         <h2 className="font-semibold">{title}</h2>
 

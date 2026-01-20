@@ -40,7 +40,7 @@ export default function Products() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-8 space-y-6">
+    <div className="min-h-screen text-black space-y-6">
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
