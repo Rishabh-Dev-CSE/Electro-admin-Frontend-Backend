@@ -165,6 +165,7 @@ def categories(request):
     return Response({'data':data})
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def add_subcategory(request):
     
     # ---------- GET : list subcategories ----------
@@ -224,6 +225,7 @@ def add_subcategory(request):
         )
 
 @api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 def delete_category(request, pk):
     if request.user.role != "admin":
           return Response(
@@ -238,6 +240,7 @@ def delete_category(request, pk):
         return Response({"error": "Category not found"}, status=404)
 
 @api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 def delete_subcategory(request, pk):
     if request.user.role != "admin":
           return Response(
@@ -250,6 +253,86 @@ def delete_subcategory(request, pk):
         return Response({"message": "SubCategory deleted"})
     except Subcategory.DoesNotExist:
         return Response({"error": "SubCategory not found"}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_brands(request):
+    # ---------- POST : add subcategory ----------
+    if request.method == 'POST':
+        if request.user.role != "admin":
+          return Response(
+            {"error": " Admin allow Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+        name = request.data.get('name')
+        category_id = request.data.get('category')
+
+        if not name:
+            return Response(
+                {'error': 'Brands name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not category_id:
+            return Response(
+                {'error': 'Category is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            return Response(
+                {'error': 'Invalid category'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        Brand.objects.create(
+            name=name,
+            category=category
+        )
+
+        return Response(
+            {'message': f'{name} brands added successfully'},
+            status=status.HTTP_201_CREATED
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_brands(request):
+       # ---------- GET : list subcategories ----------
+    if request.method == 'GET':
+        data = []
+        for brd in Brand.objects.select_related('category').all():
+            data.append({
+                "id": brd.id,
+                "name": brd.name,
+                "category": {
+                    "id": brd.category.id,
+                    "name": brd.category.name
+                }
+            })
+        return Response({'data':data})
+    
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_brand(request, pk):
+    if request.user.role != "admin":
+          return Response(
+            {"error": " Admin Role error"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        Brand.objects.get(id=pk).delete() 
+        return Response({"message": "Brand deleted"})
+    except Brand.DoesNotExist:
+        return Response({"error": "Brand not found"}, status=404)
+
+
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

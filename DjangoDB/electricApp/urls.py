@@ -10,14 +10,17 @@ urlpatterns = [
     path("add/category/", views.add_category),
     path('subcategories/', views.add_subcategory),
     path('add/subcategories/', views.add_subcategory),
+    path('add/brand/', views.add_brands),
+    path('brands/', views.get_brands),
 
     path("category/delete/<int:pk>/", views.delete_category),
     path("subcategory/delete/<int:pk>/", views.delete_subcategory),
+    path('delete/brand/<int:pk>/', views.delete_brand),
 
     path("products/", views.products_list),
     path("products/add/", views.add_product),
     path("products/<int:pk>/", views.product_detail),
-    path("products/delete/<int:pk>/", views.delete_product),
+    path("products/delete/<int:pk>/", views.delete_product), 
    
     path("orders/create/", views.create_order),
     path("orders/", views.admin_orders),

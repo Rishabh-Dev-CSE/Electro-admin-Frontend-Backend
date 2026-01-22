@@ -5,16 +5,19 @@ import StatCard from "../dashboard/StatCard";
 export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [newCat, setNewCat] = useState("");
   const [newSub, setNewSub] = useState("");
+  const [newBrand, setNewBrand] = useState("");
   const [selectedCat, setSelectedCat] = useState("");
   const totalCategories = categories.length;
   const totalSubCategories = subCategories.length;
+  const totalBrands = brands.length;
   const [activeCategory, setActiveCategory] = useState(null);
   const [categorySearch, setCategorySearch] = useState("");
   const [subCategorySearch, setSubCategorySearch] = useState("");
+  const [brandSearch, setBrandSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(null);
-  // { type: "category" | "subcategory", id: number }
 
 
 
@@ -41,8 +44,21 @@ export default function Categories() {
     }
   };
 
+  /* ================= FETCH SUBCATEGORIES ================= */
+  const fetchBrands = async () => {
+    try {
+      const res = await apiGet("/api/brands/");
+      const list = Array.isArray(res) ? res : res?.data || [];
+      setBrands(list);
+    } catch (err) {
+      console.error("BRANDS FETCH ERROR 👉", err);
+    }
+  };
+
+
   /* ================= ON LOAD ================= */
   useEffect(() => {
+    fetchBrands();
     fetchCategories();
     fetchSubCategories(); // 🔥 THIS WAS MISSING
   }, []);
@@ -72,19 +88,41 @@ export default function Categories() {
     }
 
     try {
-      const res = await apiPost("/api/subcategories/", {   // ✅ FIXED URL
+      const res = await apiPost("/api/add/subcategories/", {
         name: newSub,
         category: selectedCat,
       });
 
       alert(res?.message || "Subcategory added successfully");
       setNewSub("");
-      fetchSubCategories(); // 🔥 refresh list
+      fetchSubCategories();
     } catch (err) {
       alert(err?.message || "Failed to add subcategory");
     }
   };
 
+
+  /*===================== Add Brands ==================== */
+
+  const addNewBrand = async () => {
+    if (!newBrand.trim() || !selectedCat) {
+      alert("Select category & enter brands name");
+      return;
+    }
+
+    try {
+      const res = await apiPost("/api/add/brand/", {
+        name: newBrand,
+        category: selectedCat,
+      });
+
+      alert(res?.message || "Brand added successfully");
+      setNewBrand("");
+      fetchBrands();
+    } catch (err) {
+      alert(err?.message || "Failed to add Brads");
+    }
+  };
 
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(categorySearch.toLowerCase())
@@ -97,6 +135,15 @@ export default function Categories() {
         sub.name.toLowerCase().includes(subCategorySearch.toLowerCase())
     )
     : [];
+
+  const filteredBrands = activeCategory
+    ? brands.filter(
+      (brd) =>
+        brd.category.id === activeCategory.id &&
+        brd.name.toLowerCase().includes(brandSearch.toLowerCase())
+    )
+    : [];
+
 
   const openMenu = (type, id) => {
     setMenuOpen({ type, id });
@@ -117,11 +164,14 @@ export default function Categories() {
       alert(res?.message || "Category deleted");
       fetchCategories();
       fetchSubCategories();
+      fetchBrands();
       setMenuOpen(null);
     } catch (err) {
       alert(err?.message || "Delete failed");
     }
   };
+
+  // delete subcategory
 
   const deleteSubCategory = async (id) => {
     if (!window.confirm("Delete this sub-category?")) return;
@@ -137,6 +187,19 @@ export default function Categories() {
   };
 
 
+  // delete brands
+  const deleteBrand = async (id) => {
+    if (!window.confirm("Delete this Brand?")) return;
+
+    try {
+      const res = await apiDelete(`/api/delete/brand/${id}/`, {}, 'DELETE');
+      alert(res?.message);
+      fetchBrands();
+      setMenuOpen(null);
+    } catch (err) {
+      alert(err)
+    }
+  };
 
 
   return (
@@ -154,6 +217,7 @@ export default function Categories() {
           title="Total Categories"
           value={totalCategories}
           icon="🗂️"
+          type="pending"
         />
 
         <StatCard
@@ -164,8 +228,9 @@ export default function Categories() {
 
         <StatCard
           title="Total Brands"
-          value="300"
+          value={totalBrands}
           icon="🏷️"
+          type="ready"
         />
       </div>
 
@@ -226,11 +291,50 @@ export default function Categories() {
         </div>
       </div>
 
-      {/* CATEGORY + SUBCATEGORY WINDOWS-STYLE LIST */}
+
+      {/* FORMS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ADD SUB CATEGORY */}
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h3 className="font-semibold text-lg mb-4">Add Sub-Category</h3>
+
+          <select
+            className="w-full border p-3 rounded-lg mb-4"
+            value={selectedCat}
+            onChange={(e) => setSelectedCat(e.target.value)}
+          >
+            <option value="">Select Category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            className="w-full border p-3 rounded-lg mb-4"
+            placeholder="Enter brands name"
+            value={newBrand}
+            onChange={(e) => setNewBrand(e.target.value)}
+          />
+
+          <button
+            onClick={addNewBrand}
+            className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700"
+          >
+            Add Brand
+          </button>
+        </div>
+      </div>
+
+
+      {/* CATEGORY + SUBCATEGORY + Brands*/}
       <div className="bg-[#f3f3f3] p-4 border border-gray-300 shadow-inner flex gap-4">
 
         {/* LEFT: CATEGORY LIST (Windows Menu Style) */}
         <div className="w-1/3 bg-white border border-gray-300 shadow-sm">
+        <div className="text-center text-xl bg-gray-200">Categories</div>
           {filteredCategories.map((cat) => (
             <div
               key={cat.id}
@@ -272,8 +376,9 @@ export default function Categories() {
           ))}
         </div>
 
-        {/* RIGHT: SUBCATEGORY PANEL (Windows Sub Menu) */}
-        <div className="w-2/3 bg-white border border-gray-300 shadow-sm p-2">
+        {/* Middel: SUBCATEGORY PANEL (Windows Sub Menu) */}
+        <div className="w-2/3 bg-white border border-gray-300 shadow-sm ">
+        <div className="text-center text-xl bg-gray-200">Sub-category</div>
           {activeCategory ? (
             filteredSubCategories.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
@@ -324,8 +429,60 @@ export default function Categories() {
           )}
         </div>
 
-      </div>
+        {/* RIGHT: Brands PANEL (Windows brands Menu) */}
+        <div className="w-2/3 bg-white border border-gray-300 shadow-sm">
+          <div className="text-center text-xl bg-gray-200"> Brands Name</div>
+          {activeCategory ? (
+            filteredBrands.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2">
+                {filteredBrands.map((brd) => (
+                  <div
+                    key={brd.id}
+                    className="relative flex justify-between items-center px-3 py-2 text-sm border border-gray-200 cursor-pointer hover:bg-[#e5f1fb]"
+                  >
+                    <span className="truncate">{brd.name}</span>
 
+                    {/* THREE DOTS */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openMenu("brands", brd.id);
+                      }}
+                      className="text-gray-600 hover:text-black px-1"
+                    >
+                      ⋮
+                    </button>
+
+                    {/* SUBCATEGORY CONTEXT MENU */}
+                    {menuOpen?.type === "brands" && menuOpen?.id === brd.id && (
+                      <div
+                        onMouseLeave={closeMenu}
+                        className="absolute left-full top-0 ml-1 w-48 bg-white border border-gray-300 shadow-lg z-30"
+                      >
+                        <div
+                          onClick={() => deleteBrand(brd.id)}
+                          className="px-3 py-2 text-sm hover:bg-[#e5f1fb] text-red-600 cursor-pointer"
+                        >
+                          🗑️ Delete Brands
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 px-2">
+                No sub-categories found
+              </p>
+            )
+          ) : (
+            <p className="text-sm text-gray-500 px-2">
+              Select a category to view sub-categories
+            </p>
+          )}
+        </div>
+
+      </div>
 
     </div>
   );
