@@ -29,6 +29,7 @@ from .models import *
 def loginUser(request):
     username = request.data.get("username")
     password = request.data.get("password")
+    
 
     if not username or not password:
         return Response({"error": "Username and password required"}, status=400)
@@ -486,7 +487,21 @@ def product_detail(request, pk):
 def product_update(request, pk):
     if request.user.role != "admin":
         return Response({"message": "Only admin can update"})
-    product = get_object_or_404(Product, pk = pk )
+    
+    name = request.data.get('name')
+    price = request.data.get('price')
+    stock = request.data.get('stock')
+    status = request.data.get('is_active')
+
+    product = Product.objects.get(id = pk)
+    product.name = name
+    product.price = price 
+    product.stock = stock
+    product.is_active = status
+    product.save()
+    return Response({'message':"product updated "})
+
+ 
     
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
@@ -604,9 +619,7 @@ def update_order_status(request, id):
         )
 
     status = request.data.get("status")
-    print(status)
     order = Order.objects.get(id=id)
-    print(order.order_status)
     order.order_status = status
     order.save()
 

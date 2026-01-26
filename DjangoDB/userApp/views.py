@@ -9,7 +9,87 @@ import json
 import random
 from django.utils.text import slugify
 from electricApp.models import *
+from django.conf import settings
+from django.core.mail import send_mail
 
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def customerUserLogin(request):
+    username = request.data.get("username")
+    password = request.data.get("password")
+    role = request.data.get("role")
+
+    #  Basic validation
+    if not username or not password:
+        return Response(
+            {"error": "Username and password are required"},
+            status=400
+        )
+
+    if not role:
+        return Response(
+            {"error": "Role is required"},
+            status=400
+        )
+
+    #  User existence check (SAFE)
+    user = CustomUser.objects.filter(username=username).first()
+    if not user:
+        return Response(
+            {"error": "Invalid username or password"},
+            status=401
+        )
+
+    #  Active user check (IMPORTANT)
+    if not user.is_active:
+        return Response(
+            {"error": "Your account is blocked. Contact support."},
+            status=403
+        )
+
+    #  Authentication
+    user = authenticate(username=username, password=password)
+    if not user:
+        return Response(
+            {"error": "Invalid username or password"},
+            status=401
+        )
+
+    #  Role validation (OPTIONAL but recommended)
+    if hasattr(user, "role") and user.role != role:
+        return Response(
+            {"error": "Invalid role for this user"},
+            status=403
+        )
+
+    # JWT Tokens
+    refresh = RefreshToken.for_user(user)
+    access = str(refresh.access_token)
+
+    response = Response({
+        "message": "Login successful",
+        "access": access,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "role": getattr(user, "role", None),
+            "is_staff": user.is_staff,
+            "is_active": user.is_active
+        }
+    })
+
+    # 7 Secure HttpOnly cookie (Refresh token)
+    response.set_cookie(
+        key="refresh_token",
+        value=str(refresh),
+        httponly=True,
+        secure=False,      
+        samesite="Lax",
+        max_age=7 * 24 * 60 * 60
+    )
+
+    return response
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -219,3 +299,74 @@ def update_review_status(request, id):
     review.save()
 
     return Response({"message": "Review status updated"})
+
+from smtplib import SMTPException
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def mail_data(request):
+    # Required fields
+    required_fields = ["name", "email", "mobile"]
+
+    for field in required_fields:
+        if not request.data.get(field):
+            return Response(
+                {"error": f"{field} is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # Extract fields safely
+    name = request.data.get("name", "")
+    email = request.data.get("email", "")
+    mobile = request.data.get("mobile", "")
+    course = request.data.get("course_interestfor", "")
+    degree = request.data.get("degree", "")
+    specialization = request.data.get("specialization", "")
+    yop = request.data.get("yop", "")
+    marks = request.data.get("marks", "")
+    college_state = request.data.get("college_state", "")
+    college_name = request.data.get("college_name", "")
+    location = request.data.get("trng_centre", "")
+    enquiry = request.data.get("enquiry", "")
+
+    # Email body (Plain Text)
+    email_body = f"""
+New Enquiry Received
+
+Name: {name}
+Email: {email}
+Mobile: {mobile}
+
+Course Applied: {course}
+Degree: {degree}
+Specialization: {specialization}
+Year of Passing: {yop}
+Marks: {marks}
+
+College State: {college_state}
+College Name: {college_name}
+Preferred Location: {location}
+
+Enquiry:
+{enquiry}
+    """
+
+    try:
+        send_mail(
+            subject="New Enquiry Form Submission",
+            message=email_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL],  # ✅ use real email
+            fail_silently=False,
+        )
+    except SMTPException:
+        return Response(
+            {"error": "Email service unavailable"},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    return Response(
+        {"success": "Enquiry submitted successfully"},
+        status=status.HTTP_200_OK
+    )
