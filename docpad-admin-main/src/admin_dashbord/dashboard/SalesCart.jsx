@@ -42,7 +42,7 @@ export default function SalesChart({ chart }) {
     scales: {
       y: {
         beginAtZero: false,
-        min: 1000,                // 🔥 100 se start
+        min: 100,                 // 🔥 100 se start
         ticks: {
           stepSize: 100,
           callback: (v) => `₹${v}`,
@@ -57,14 +57,14 @@ export default function SalesChart({ chart }) {
 
   return (
     <>
-      <div className="flex justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-200">
+      <div className="flex justify-between mb-4 ">
+        <h2 className="text-lg font-semibold text-black">
           Weekly Sales Analytics
         </h2>
         <span className="text-sm text-gray-400">Last 7 Days</span>
       </div>
 
-      <Line data={data} options={options} />
+      <Line className="text-black bg-black" data={data} options={options} />
     </>
   );
 }

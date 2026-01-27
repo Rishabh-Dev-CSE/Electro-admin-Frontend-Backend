@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiUpdate } from "../../utils/api";
+import SuccessErrorCard from "../../components/Success_Error_model";
 
 export default function OrderList() {
   const [orders, setOrders] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [hoverAddress, setHoverAddress] = useState(null);
-
+  const [modal, setModal] = useState({
+      open: false,
+      type: "",
+      message: "",
+    });
 
   /* ================= FETCH ORDERS ================= */
   const fetchOrders = async () => {
@@ -25,10 +30,27 @@ export default function OrderList() {
     });
     fetchOrders();
     setOpenMenuId(null);
+    window.location.href = "/admin/orders/ready-to-ship"
   };
 
   return (
     <div className="rounded-xl bg-white shadow">
+      {/* {modal.open && (
+        <SuccessErrorCard
+          type={modal.type}
+          title={modal.type === "success" ? "Success" : "Error"}
+          message={modal.message}
+          buttonText={modal.type === "success" ? "Continue" : "Try again"}
+          onClick={() => {
+            setModal({ open: false, type: "", message: "" });
+
+            if (modal.type === "success") {
+              const user = JSON.parse(localStorage.getItem("user"));
+            }
+          }}
+        />
+      )} */}
+
       <table className="w-full text-sm">
         <thead className="bg-gray-100">
           <tr>

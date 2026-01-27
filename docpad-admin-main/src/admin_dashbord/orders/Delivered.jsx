@@ -29,6 +29,7 @@ export default function Delivered() {
             await apiUpdate(`/api/orders/${orderId}/status/`, { status });
             fetchOrders();
             setOpenMenuId(null);
+             window.location.reload();
         } catch (e) {
             alert("Status update failed");
         }

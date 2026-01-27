@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiUpdate } from "../../utils/api";
 import OrderDetailsModal from "./OrderDetails";
+import { Navigate } from "react-router-dom";
 
 export default function ReadyToShip() {
     const [orders, setOrders] = useState([]);
@@ -29,13 +30,15 @@ export default function ReadyToShip() {
             await apiUpdate(`/api/orders/${orderId}/status/`, { status });
             fetchOrders();
             setOpenMenuId(null);
+            window.location.href = "/admin/orders/shipped"
+            
         } catch (e) {
             alert("Status update failed");
         }
     };
 
     /* ================= DOWNLOAD LABEL ================= */
-    const downloadLabel = async (orderId, status = "Shipped") => {
+    const downloadLabel = async (orderId, status = "Packed") => {
         try {
             // 1️⃣ Download label (PDF)
             window.open(
@@ -60,7 +63,7 @@ export default function ReadyToShip() {
 
     /* ================= FILTER ================= */
     const filteredOrders = orders.filter(
-        (o) => o.status === "Accept" || o.status === "shipped"
+        (o) => o.status === "Accept" || o.status === "Packed"
     );
 
     return (
@@ -137,16 +140,16 @@ export default function ReadyToShip() {
                                             </button>
 
                                             {/* MARK AS PACKED */}
-                                            {o.status === "Accept" && (
+                                            {o.status === "Accept" || o.status === "Packed" && (
                                                 <button
-                                                    onClick={() => updateStatus(o.id, "Packed")}
+                                                    onClick={() => updateStatus(o.id, "Shipped")}
                                                     className="block w-full px-4 py-2 text-left hover:bg-purple-50 text-purple-600"
                                                 >
                                                     📦 Mark as Packed
                                                 </button>
                                             )}
 
-                                         
+
                                             {/* CANCEL */}
                                             <button
                                                 onClick={() => updateStatus(o.id, "Cancelled")}

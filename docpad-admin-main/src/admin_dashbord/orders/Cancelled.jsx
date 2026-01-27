@@ -31,6 +31,7 @@ export default function Cancelled() {
 
     return (
         <div className="bg-white rounded-xl shadow">
+            
             <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                     <tr>
