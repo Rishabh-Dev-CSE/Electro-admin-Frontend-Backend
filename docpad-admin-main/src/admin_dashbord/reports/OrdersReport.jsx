@@ -7,30 +7,43 @@ import ReportFilters from "./ReportFilters";
 export default function OrdersReport() {
   const [data, setData] = useState(null);
   const [filters, setFilters] = useState({ month: "", year: "" });
+  const [loading, setLoading] = useState(true);
 
   /* ================= FETCH DATA ================= */
   useEffect(() => {
     const fetchData = async () => {
-      const q = `?month=${filters.month}&year=${filters.year}`;
-      const res = await apiGet(`/api/reports/orders/dashboard/${q}`);
-      setData(res);
+      try {
+        setLoading(true);
+        const q = `?month=${filters.month}&year=${filters.year}`;
+        const res = await apiGet(`/api/reports/orders/dashboard/${q}`);
+
+        // ✅ FIX 1: res.data
+        setData(res.data);
+      } catch (err) {
+        console.error("Orders report fetch failed", err);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchData();
   }, [filters]);
 
   /* ================= SAFE CHART KEY ================= */
   const chartKey = `${filters.month}-${filters.year}`;
 
-  /* ================= MEMO CHART DATA ================= */
+  /* ================= CHART DATA ================= */
   const chartData = useMemo(() => {
-    if (!data) return { labels: [], datasets: [] };
+    if (!data?.daily_sales) {
+      return { labels: [], datasets: [] };
+    }
 
     return {
-      labels: data.daily_sales.labels,
+      labels: data.daily_sales.labels || [],
       datasets: [
         {
           label: "Daily Sales (₹)",
-          data: data.daily_sales.data,
+          data: data.daily_sales.data || [],
           borderColor: "#2563eb",
           backgroundColor: "rgba(37,99,235,0.15)",
           fill: true,
@@ -49,7 +62,7 @@ export default function OrdersReport() {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx) => `₹ ${ctx.raw.toLocaleString()}`,
+          label: (ctx) => `₹ ${ctx.raw?.toLocaleString?.() || 0}`,
         },
       },
     },
@@ -57,27 +70,41 @@ export default function OrdersReport() {
       x: { grid: { display: false } },
       y: {
         grid: { color: "#e5e7eb" },
-        ticks: { callback: (v) => v.toLocaleString() },
+        ticks: {
+          callback: (v) => v.toLocaleString(),
+        },
       },
     },
   };
 
-  /* ================= DOWNLOAD HANDLERS ================= */
+  /* ================= EXPORT ================= */
   const downloadCSV = () => {
-    const url = `http://localhost:8000/api/reports/orders/export-csv/?month=${filters.month}&year=${filters.year}`;
-    window.open(url, "_blank");
+    window.open(
+      `http://localhost:8000/api/reports/orders/export-csv/?month=${filters.month}&year=${filters.year}`,
+      "_blank"
+    );
   };
 
   const downloadPDF = () => {
-    const url = `http://localhost:8000/api/reports/orders/export-pdf/?month=${filters.month}&year=${filters.year}`;
-    window.open(url, "_blank");
+    window.open(
+      `http://localhost:8000/api/reports/orders/export-pdf/?month=${filters.month}&year=${filters.year}`,
+      "_blank"
+    );
   };
 
   /* ================= LOADING ================= */
-  if (!data) {
+  if (loading) {
     return (
       <div className="p-10 text-center text-gray-400">
         Loading orders report...
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="p-10 text-center text-red-500">
+        Failed to load report
       </div>
     );
   }
@@ -107,36 +134,36 @@ export default function OrdersReport() {
 
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Stat title="Total Orders" value={data.kpis.total_orders} gradient="yellow" />
-        <Stat title="Delivered" value={data.kpis.delivered} gradient="green" />
-        <Stat title="Pending" value={data.kpis.pending} gradient="purple" />
-        <Stat title="Cancelled" value={data.kpis.cancelled} gradient="red" />
+        <Stat title="Total Orders" value={data.kpis?.total_orders || 0} gradient="yellow" />
+        <Stat title="Delivered" value={data.kpis?.delivered || 0} gradient="green" />
+        <Stat title="Pending" value={data.kpis?.pending || 0} gradient="purple" />
+        <Stat title="Cancelled" value={data.kpis?.cancelled || 0} gradient="red" />
       </div>
 
       {/* CHART */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h3 className="font-semibold mb-4">Daily Sales Trend</h3>
-
         <div className="h-[320px]">
-          <Line
-            key={chartKey}   // 🔥 IMPORTANT: force re-render on filter change
-            data={chartData}
-            options={chartOptions}
-          />
+          <Line key={chartKey} data={chartData} options={chartOptions} />
         </div>
       </div>
 
       {/* TOP PRODUCTS */}
       <div className="bg-white p-6 rounded-xl text-black shadow">
         <h3 className="font-semibold mb-4">Top Products</h3>
-        <ul className="space-y-2">
-          {data.top_products.map((p, i) => (
-            <li key={i} className="flex justify-between text-sm">
-              <span>{p.product_name}</span>
-              <span className="font-semibold">{p.qty} sold</span>
-            </li>
-          ))}
-        </ul>
+
+        {data.top_products?.length ? (
+          <ul className="space-y-2">
+            {data.top_products.map((p, i) => (
+              <li key={i} className="flex justify-between text-sm">
+                <span>{p.product_name}</span>
+                <span className="font-semibold">{p.qty} sold</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-400">No data</p>
+        )}
       </div>
     </div>
   );
