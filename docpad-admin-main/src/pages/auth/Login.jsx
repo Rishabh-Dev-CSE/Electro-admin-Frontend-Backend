@@ -1,21 +1,26 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { apiPost } from "../../utils/api";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import SuccessErrorCard from "../../components/Success_Error_model";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: "", password: "",role:"admin" });
+  const [form, setForm] = useState({ username: "", password: "", role: "admin" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [userauth, setAuth] =useState("");
+  const [userauth, setAuth] = useState("");
   const [modal, setModal] = useState({
     open: false,
     type: "",
     message: "",
   });
 
+  const token = localStorage.getItem("access");
+
+  if (token) {
+    return <Navigate to="/admin/dashboard/" replace />;
+  }
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,6 +41,7 @@ export default function Login() {
         type: "success",
         message: res.message || "Login successful",
       });
+      window.location.href = "/admin/dashboard/"
 
     } catch (err) {
       setModal({
@@ -62,7 +68,7 @@ export default function Login() {
 
             if (modal.type === "success") {
               const user = JSON.parse(localStorage.getItem("user"));
-              window.location.href  = (user?.is_staff ? "/admin/dashboard" : "/");
+              window.location.href = (user?.is_staff ? "/admin/dashboard" : "/");
             }
           }}
         />
