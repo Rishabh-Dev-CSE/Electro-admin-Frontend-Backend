@@ -2,8 +2,7 @@ const BASE_URL = 'http://127.0.0.1:8000'
 
 export async function apiGet(url) {
   const token = localStorage.getItem("access");
-  console.log(token)
-  // if (!token) throw new Error("No token found");
+  if (!token) throw new Error("No token found");
   let res = await fetch(`${BASE_URL}${url}`, {
     headers: {
       "Authorization": `Bearer ${token}`,
