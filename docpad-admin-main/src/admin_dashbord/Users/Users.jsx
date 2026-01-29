@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiDelete, apiPostForm, apiUpdate } from "../../utils/api";
 import StatCard from "../dashboard/StatCard";
+import SuccessErrorCard from "../../components/Success_Error_model";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -11,8 +12,12 @@ export default function Users() {
   const [showView, setShowView] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState(null);
-
   const [menuPos, setMenuPos] = useState(null);
+  const [modal, setModal] = useState({
+    open: false,
+    type: "",
+    message: "",
+  });
 
   const [form, setForm] = useState({
     username: "",
@@ -20,68 +25,117 @@ export default function Users() {
     password: "",
     role: "customer",
     image: null,
+    is_active: true,
   });
 
   /* ================= FETCH ================= */
   const fetchUsers = async () => {
-    const res = await apiGet("/api/users/list/");
-    setUsers(res.users || []);
+    try {
+      const res = await apiGet("/api/users/list/");
+      setUsers(res.users || []);
+    } catch {
+      setModal({
+        open: true,
+        type: "error",
+        message: res.error || "Failed to load users",
+      });
+    }
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  
-  /* ================= STATS ================= */
-  const totalUsers = users.length;
-  const activeUsers = users.filter(u => u.is_active).length;
-  const blockedUsers = users.filter(u => !u.is_active).length;
-
-
   /* ================= FILTER ================= */
-  const filtered = users.filter(u =>
+  const filtered = users.filter((u) =>
     u.username.toLowerCase().includes(search.toLowerCase())
   );
 
   /* ================= CREATE ================= */
   const addUser = async () => {
-    const fd = new FormData();
-    Object.keys(form).forEach(key => {
-      if (form[key]) fd.append(key, form[key]);
-    });
+    try {
+      const fd = new FormData();
+      Object.keys(form).forEach((key) => {
+        if (form[key]) fd.append(key, form[key]);
+      });
 
-    const res = await apiPostForm("/api/users/create/", fd);
-    alert(res.message)
-    setShowAdd(false);
-    resetForm();
-    fetchUsers();
+      const res = await apiPostForm("/api/users/create/", fd);
+      if (!res?.message) throw new Error(res?.error);
+
+      setModal({
+        open: true,
+        type: "success",
+        message: res.message,
+      });
+
+      setShowAdd(false);
+      resetForm();
+      fetchUsers();
+    } catch (err) {
+      setModal({
+        open: true,
+        type: "error",
+        message: err?.message || "User creation failed",
+      });
+    }
   };
 
   /* ================= UPDATE ================= */
   const updateUser = async () => {
-    const fd = new FormData();
-    fd.append("username", form.username);
-    fd.append("email", form.email);
-    fd.append("role", form.role);
-    fd.append("is_active", form.is_active ? "1" : "0");
-    if (form.password) fd.append("password", form.password);
-    if (form.image) fd.append("image", form.image);
+    try {
+      const fd = new FormData();
+      fd.append("username", form.username);
+      fd.append("email", form.email);
+      fd.append("role", form.role);
+      fd.append("is_active", form.is_active ? "1" : "0");
 
-    await apiUpdate(`/api/users/update/${selectedUser.id}/`, fd);
+      if (form.password) fd.append("password", form.password);
+      if (form.image) fd.append("image", form.image);
 
-    setShowEdit(false);
-    resetForm();
-    fetchUsers();
+      const res = await apiUpdate(
+        `/api/users/update/${selectedUser.id}/`,
+        fd
+      );
+      if (!res?.message) throw new Error(res?.error);
+
+      setModal({
+        open: true,
+        type: "success",
+        message: res.message,
+      });
+
+      setShowEdit(false);
+      resetForm();
+      fetchUsers();
+    } catch (err) {
+      setModal({
+        open: true,
+        type: "error",
+        message: err?.message || "User update failed",
+      });
+    }
   };
 
   /* ================= DELETE ================= */
   const deleteUser = async (id) => {
-    if (!window.confirm("Delete user?")) return;
-    const res = await apiDelete(`/api/users/delete/${id}/`);
-    console.log(res.message)
-    alert(res.message)
-    fetchUsers();
+    try {
+      const res = await apiDelete(`/api/users/delete/${id}/`);
+      if (!res?.message) throw new Error(res?.error);
+
+      setModal({
+        open: true,
+        type: "success",
+        message: res.message,
+      });
+
+      fetchUsers();
+    } catch (err) {
+      setModal({
+        open: true,
+        type: "error",
+        message: err?.message || "User delete failed",
+      });
+    }
   };
 
   /* ================= HELPERS ================= */
@@ -92,7 +146,7 @@ export default function Users() {
       password: "",
       role: "customer",
       image: null,
-      is_active: form.is_active,
+      is_active: true,
     });
     setSelectedUser(null);
   };
@@ -110,13 +164,38 @@ export default function Users() {
     setShowEdit(true);
   };
 
+  const closeModal = () => {
+    setModal({ open: false, type: "", message: "" });
+  };
+
+  /* ================= STATS ================= */ 
+  const totalUsers = users.length; 
+  const activeUsers = users.filter(u => u.is_active).length; 
+  const blockedUsers = users.filter(u => !u.is_active).length;
+
+
   return (
     <div className="space-y-6">
+      {modal.open && (
+        <SuccessErrorCard
+          type={modal.type}
+          title={modal.type === "success" ? "Success" : "Error"}
+          message={modal.message}
+          buttonText={modal.type === "success" ? "Continue" : "Try again"}
+          onClick={() => {
+            setModal({ open: false, type: "", message: "" });
 
-    {/* ================= STATS ================= */}
+            if (modal.type === "success") {
+              const user = JSON.parse(localStorage.getItem("user"));
+            }
+          }}
+        />
+      )}
+
+      {/* ================= STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard title="Total Users" value={totalUsers} icon="👥" type="pending" />
-        <StatCard title="Active Users" value={activeUsers} icon="✅" type="delivered"/>
+        <StatCard title="Active Users" value={activeUsers} icon="✅" type="delivered" />
         <StatCard title="Blocked Users" value={blockedUsers} icon="🚫" type="cancelled" />
       </div>
 
