@@ -8,32 +8,43 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const access = localStorage.getItem("access");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    //token hi nahi → direct logout state
+    if (!access) {
+      setUser(null);
       setLoading(false);
-    } else {
-      apiGet("/api/auth/user/")
-        .then((res) => {
-          if (res?.user) {
-            setUser(res.user);
-            localStorage.setItem("user", JSON.stringify(res.user));
-          } else {
-            setUser(null);
-            localStorage.removeItem("user");
-          }
-        })
-        .catch(() => {
-          setUser(null);
-          localStorage.removeItem("user");
-          localStorage.removeItem("access");
-          localStorage.removeItem("refresh");
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      return;
     }
+
+    // token hai → verify user
+    apiGet("/api/auth/user/")
+      .then((res) => {
+        if (res?.user) {
+          setUser(res.user);
+          localStorage.setItem("user", JSON.stringify(res.user));
+          localStorage.setItem("role", res.user.role);
+
+          if (res.user.image) {
+            localStorage.setItem("image", res.user.image);
+          } else {
+            localStorage.removeItem("image");
+          }
+        } else {
+          throw new Error("No user");
+        }
+      })
+      .catch(() => {
+        setUser(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        localStorage.removeItem("image");
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return (
