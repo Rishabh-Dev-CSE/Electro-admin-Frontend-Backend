@@ -29,6 +29,12 @@ export default function Shipped() {
             await apiUpdate(`/api/orders/${orderId}/status/`, { status });
             fetchOrders();
             setOpenMenuId(null);
+            if (status === "Delivered") {
+                window.location.href = "/admin/orders/delivered"
+            } else {
+                window.location.href = "/admin/orders/cancelled"
+            }
+
         } catch (e) {
             alert("Status update failed");
         }

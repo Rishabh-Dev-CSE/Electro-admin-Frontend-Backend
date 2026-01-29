@@ -1,187 +1,161 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiUpdate } from "../../utils/api";
-import SuccessErrorCard from "../../components/Success_Error_model";
 
 export default function OrderList() {
   const [orders, setOrders] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
-  const [hoverAddress, setHoverAddress] = useState(null);
-  const [modal, setModal] = useState({
-      open: false,
-      type: "",
-      message: "",
-    });
 
   /* ================= FETCH ORDERS ================= */
   const fetchOrders = async () => {
     const res = await apiGet("/api/orders/");
-    setOrders(res.data || []);
+    const pendingOrders =
+      res.data?.filter((o) => o.status === "Pending") || [];
+    setOrders(pendingOrders);
   };
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  /* ================= UPDATE STATUS ================= */
-  const updateStatus = async (orderId, newStatus) => {
+  /* ================= UPDATE ORDER STATUS ================= */
+  const updateOrderStatus = async (orderId, newStatus) => {
     await apiUpdate(`/api/orders/${orderId}/status/`, {
       status: newStatus,
     });
-    fetchOrders();
     setOpenMenuId(null);
-    window.location.href = "/admin/orders/ready-to-ship"
+    fetchOrders();
   };
 
   return (
-    <div className="rounded-xl bg-white shadow">
-      {/* {modal.open && (
-        <SuccessErrorCard
-          type={modal.type}
-          title={modal.type === "success" ? "Success" : "Error"}
-          message={modal.message}
-          buttonText={modal.type === "success" ? "Continue" : "Try again"}
-          onClick={() => {
-            setModal({ open: false, type: "", message: "" });
-
-            if (modal.type === "success") {
-              const user = JSON.parse(localStorage.getItem("user"));
-            }
-          }}
-        />
-      )} */}
-
+    <div className="bg-white rounded-xl shadow overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-100 text-gray-700">
           <tr>
-            <th className="p-3">Product</th>
-            <th>Order ID</th>
-            <th>Customer</th>
-            <th>QTY</th>
-            <th>Address</th>
+            <th className="p-4 text-left">Products</th>
+            <th className="text-left">Order</th>
+            <th className="text-left">Customer</th>
+            <th className="text-left">Address</th>
             <th>Status</th>
-            <th>Order Date</th>
-            <th className="text-right pr-4">Action</th>
+            <th>Date</th>
+            <th className="text-right pr-6">Action</th>
           </tr>
         </thead>
 
         <tbody>
-          {orders
-            .filter((o) => o.status === "Pending")
-            .map((o) => {
-              const firstItem = o.items?.[0];
-
-              return (
-                <tr key={o.id} className="border-t hover:bg-gray-50">
-                  {/* PRODUCT */}
-                  <td className="p-2">
-                    <img src={o.product_image} className="h-[10vmin] w-[10vmin] border border-black" alt="" srcset="" />
-                  </td>
-
-                  {/* ORDER ID */}
-                  <td className="font-semibold">#{o.order_id}</td>
-
-                  {/* CUSTOMER */}
-                  <td>{o.customer}</td>
-
-                  {/* QTY */}
-                  <td>{o.total_qty}</td>
-
-                  {/* ADDRESS */}
-                  <td className="relative max-w-xs">
-                    <div
-                      className="flex items-center gap-2 truncate cursor-pointer"
-
-                    >
-                      {o.address.slice(0, 20)}...
-                      <span
-                        className="text-blue-600"
-                        onMouseEnter={() => setHoverAddress(o.address)}
-                        onMouseLeave={() => setHoverAddress(null)}
-                      >👁️</span>
-                    </div>
-
-                    {/* HOVER CARD */}
-                    {hoverAddress === o.address && (
-                      <div className="absolute left-40 top-8 z-50 w-[38vmin]
-                    bg-white border shadow-xl rounded-lg p-2">
-                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                          {o.address}
-                        </p>
-                      </div>
-                    )}
-                  </td>
-
-                  {/* STATUS */}
-                  <td>
-                    <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-700">
-                      {o.status}
-                    </span>
-                  </td>
-
-                  {/* DATE */}
-                  <td>{o.date}</td>
-
-                  {/* ACTION */}
-                  <td className="text-right pr-4 relative">
-                    <button
-                      onClick={(e) => {
-                        const r = e.currentTarget.getBoundingClientRect();
-                        setMenuPos({ x: r.right, y: r.bottom });
-                        setOpenMenuId(openMenuId === o.id ? null : o.id);
-                      }}
-                      className="text-xl px-2"
-                    >
-                      ⋮
-                    </button>
-
-                    {openMenuId === o.id && (
-                      <div
-                        className="fixed inset-0 z-[9999]"
-                        onClick={() => setOpenMenuId(null)}
-                      >
-                        <div
-                          className="fixed bg-white border rounded-xl shadow-xl w-40"
-                          style={{
-                            top: menuPos.y + 6,
-                            left: menuPos.x - 160,
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {/* ACCEPT */}
-                          <button
-                            onClick={() =>
-                              updateStatus(o.id, "Accept")
-                            }
-                            className="block w-full px-4 py-2 text-left hover:bg-blue-50 text-blue-600"
-                          >
-                            ✔ Accept
-                          </button>
-
-                          {/* CANCEL */}
-                          <button
-                            onClick={() =>
-                              updateStatus(o.id, "Cancelled")
-                            }
-                            className="block w-full px-4 py-2 text-left hover:bg-red-50 text-red-600"
-                          >
-                            ✖ Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-
-          {!orders.length && (
+          {orders.length === 0 && (
             <tr>
-              <td colSpan="8" className="p-6 text-center text-gray-400">
-                No orders found
+              <td colSpan="7" className="p-8 text-center text-gray-400">
+                No pending orders
               </td>
             </tr>
           )}
+
+          {orders.map((order) => (
+            <tr
+              key={order.id}
+              className="border-t align-top hover:bg-gray-50 transition"
+            >
+              {/* PRODUCTS */}
+              <td className="p-4">
+                <div className="space-y-3">
+                  {order.items.map((item) => (
+                    <div
+                      key={item.product_id}
+                      className="flex items-center gap-3"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.product_name}
+                        className="h-11 w-11 rounded border bg-white object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          {item.product_name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Qty: {item.quantity}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </td>
+
+              {/* ORDER */}
+              <td className="font-semibold text-gray-800">
+                #{order.order_id}
+              </td>
+
+              {/* CUSTOMER */}
+              <td className="text-gray-700">{order.customer}</td>
+
+              {/* ADDRESS */}
+              <td className="max-w-xs text-gray-600">
+                <div className="line-clamp-2">{order.address}</div>
+              </td>
+
+              {/* STATUS */}
+              <td>
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                  {order.status}
+                </span>
+              </td>
+
+              {/* DATE */}
+              <td className="text-gray-600">{order.date}</td>
+
+              {/* ACTION */}
+              <td className="relative text-right pr-6">
+                <button
+                  className="h-8 w-8 rounded-full hover:bg-gray-200 text-lg"
+                  onClick={(e) => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    setMenuPos({ x: r.right, y: r.bottom });
+                    setOpenMenuId(
+                      openMenuId === order.id ? null : order.id
+                    );
+                  }}
+                >
+                  ⋮
+                </button>
+
+                {openMenuId === order.id && (
+                  <div
+                    className="fixed inset-0 z-[9999]"
+                    onClick={() => setOpenMenuId(null)}
+                  >
+                    <div
+                      className="fixed w-44 bg-white border rounded-lg shadow-lg"
+                      style={{
+                        top: menuPos.y + 6,
+                        left: menuPos.x - 180,
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={() =>
+                          updateOrderStatus(order.id, "Accept")
+                        }
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-blue-600"
+                      >
+                        ✔ Accept Order
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          updateOrderStatus(order.id, "Cancelled")
+                        }
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600"
+                      >
+                        ✖ Cancel Order
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

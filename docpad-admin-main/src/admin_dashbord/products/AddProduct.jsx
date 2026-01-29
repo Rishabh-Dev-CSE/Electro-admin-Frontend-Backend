@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { apiGet, apiPost, apiPostForm } from "../../utils/api";
+import { apiGet, apiPostForm } from "../../utils/api";
+import SuccessErrorCard from "../../components/Success_Error_model";
 
 export default function AddProduct() {
 
@@ -22,13 +23,23 @@ export default function AddProduct() {
   const [images, setImages] = useState([]);
   const [specs, setSpecs] = useState([{ key: "", value: "" }]);
 
+  const [modal, setModal] = useState({
+    open: false,
+    type: "",
+    message: "",
+  });
+
   /* ================= FETCH APIs ================= */
   const fetchCategories = async () => {
     try {
       const res = await apiGet("/api/categories/");
       setCategories(res?.data || []);
-    } catch (err) {
-      console.error("Category fetch error", err);
+    } catch {
+      setModal({
+        open: true,
+        type: "error",
+        message: "Failed to fetch categories",
+      });
     }
   };
 
@@ -36,8 +47,12 @@ export default function AddProduct() {
     try {
       const res = await apiGet("/api/subcategories/");
       setSubCategories(res?.data || []);
-    } catch (err) {
-      console.error("SubCategory fetch error", err);
+    } catch {
+      setModal({
+        open: true,
+        type: "error",
+        message: "Failed to fetch subcategories",
+      });
     }
   };
 
@@ -76,12 +91,6 @@ export default function AddProduct() {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  useEffect(() => {
-    return () => {
-      images.forEach((img) => URL.revokeObjectURL(img));
-    };
-  }, [images]);
-
   /* ================= SUBCATEGORY FILTER ================= */
   const filteredSubCategories = subCategories.filter((s) => {
     const catId =
@@ -92,7 +101,11 @@ export default function AddProduct() {
   /* ================= SUBMIT PRODUCT ================= */
   const submitProduct = async () => {
     if (!form.name || !form.category || !form.subcategory) {
-      alert("Name, Category and SubCategory are required");
+      setModal({
+        open: true,
+        type: "error",
+        message: "Name, Category and SubCategory are required",
+      });
       return;
     }
 
@@ -112,9 +125,14 @@ export default function AddProduct() {
 
     try {
       const res = await apiPostForm("/api/products/add/", fd);
-      alert(res.message);
 
-      // reset form
+      setModal({
+        open: true,
+        type: "success",
+        message: res?.message || "Product added successfully",
+      });
+
+      /* RESET FORM */
       setForm({
         name: "",
         category: "",
@@ -130,28 +148,43 @@ export default function AddProduct() {
       setSpecs([{ key: "", value: "" }]);
 
     } catch (err) {
-      alert(err?.error || err?.message || "Product add failed");
+      setModal({
+        open: true,
+        type: "error",
+        message: err?.error || err?.message || "Product add failed",
+      });
     }
   };
 
-
   /* ================= UI ================= */
   return (
-    <div className="min-h-screen text-black py-10">
+    <div className="min-h-screen py-10">
+
+      {modal.open && (
+        <SuccessErrorCard
+          type={modal.type}
+          title={modal.type === "success" ? "Success" : "Error"}
+          message={modal.message}
+          buttonText="OK"
+          onClick={() =>
+            setModal({ open: false, type: "", message: "" })
+          }
+        />
+      )}
+
       <div className="max-w-7xl mx-auto">
 
-        {/* HEADER */}
-        <h1 className="text-3xl font-bold mb-6 text-gray-500">Add New Product</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-500">
+          Add New Product
+        </h1>
 
         <div className="grid grid-cols-12 gap-8">
 
-          {/* LEFT COLUMN */}
+          {/* LEFT */}
           <div className="col-span-12 lg:col-span-8 space-y-6">
 
-            {/* BASIC INFO */}
-            <div className="bg-white border rounded-md p-6">
+            <div className="bg-white border p-6 rounded">
               <h2 className="font-semibold mb-4">Product Information</h2>
-
               <input
                 name="name"
                 value={form.name}
@@ -159,7 +192,6 @@ export default function AddProduct() {
                 placeholder="Product name"
                 className="w-full border p-3 rounded mb-4"
               />
-
               <textarea
                 name="description"
                 value={form.description}
@@ -169,25 +201,22 @@ export default function AddProduct() {
               />
             </div>
 
-            {/* PRICING */}
-            <div className="bg-white border rounded-md p-6">
+            <div className="bg-white border p-6 rounded">
               <h2 className="font-semibold mb-4">Pricing & Inventory</h2>
-
               <div className="grid grid-cols-3 gap-4">
-                <input name="price" type="number" placeholder="Price" onChange={handleChange} value={form.price} required className="border p-3 rounded" />
-                <input name="stock" type="number" placeholder="Stock" onChange={handleChange} value={form.stock} required className="border p-3 rounded" />
-                <input name="sku" placeholder="SKU" onChange={handleChange} value={form.sku} className="border p-3 rounded" />
+                <input name="price" type="number" placeholder="Price" value={form.price} onChange={handleChange} className="border p-3 rounded" />
+                <input name="stock" type="number" placeholder="Stock" value={form.stock} onChange={handleChange} className="border p-3 rounded" />
+                <input name="sku" placeholder="SKU" value={form.sku} onChange={handleChange} className="border p-3 rounded" />
               </div>
             </div>
 
-            {/* SPECIFICATIONS */}
-            <div className="bg-white border rounded-md p-6">
-              <h2 className="font-semibold mb-4">Specifications (Optional)</h2>
+            <div className="bg-white border p-6 rounded">
+              <h2 className="font-semibold mb-4">Specifications</h2>
 
               {specs.map((s, i) => (
                 <div key={i} className="flex gap-3 mb-3">
-                  <input placeholder="Key" value={s.key} onChange={(e) => updateSpec(i, "key", e.target.value)} className="border p-2 w-1/2 rounded" />
-                  <input placeholder="Value" value={s.value} onChange={(e) => updateSpec(i, "value", e.target.value)} className="border p-2 w-1/2 rounded" />
+                  <input value={s.key} placeholder="Key" onChange={(e) => updateSpec(i, "key", e.target.value)} className="border p-2 w-1/2 rounded" />
+                  <input value={s.value} placeholder="Value" onChange={(e) => updateSpec(i, "value", e.target.value)} className="border p-2 w-1/2 rounded" />
                   <button onClick={() => removeSpec(i)} className="text-red-500">✕</button>
                 </div>
               ))}
@@ -198,11 +227,10 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
 
-            {/* CATEGORY */}
-            <div className="bg-white border rounded-md p-6">
+            <div className="bg-white border p-6 rounded">
               <h2 className="font-semibold mb-4">Organization</h2>
 
               <select name="category" value={form.category} onChange={handleChange} className="w-full border p-3 rounded mb-3">
@@ -220,46 +248,21 @@ export default function AddProduct() {
               </select>
             </div>
 
-            {/* STATUS */}
-            <div className="bg-white border rounded-md p-6">
+            <div className="bg-white border p-6 rounded">
               <h2 className="font-semibold mb-4">Status</h2>
-
               <select name="status" value={form.status} onChange={handleChange} className="w-full border p-3 rounded">
                 <option>Active</option>
                 <option>Inactive</option>
               </select>
             </div>
 
-            {/* IMAGES */}
-            <div className="bg-white border rounded-md p-6">
-              <h2 className="font-semibold mb-4">Product Images</h2>
-
+            <div className="bg-white border p-6 rounded">
+              <h2 className="font-semibold mb-4">Images</h2>
               <input type="file" multiple accept="image/*" onChange={handleImageChange} />
-
-              {images.length > 0 && (
-                <div className="grid grid-cols-3 gap-3 mt-4">
-                  {images.map((img, i) => (
-                    <div key={i} className="relative border rounded overflow-hidden">
-                      <img
-                        src={URL.createObjectURL(img)}
-                        alt="preview"
-                        className="w-full h-24 object-cover"
-                      />
-                      <button
-                        onClick={() => removeImage(i)}
-                        className="absolute top-1 right-1 bg-black/70 text-white w-6 h-6 rounded-full text-xs"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
 
-        {/* ACTION */}
         <div className="flex justify-end mt-10">
           <button
             onClick={submitProduct}

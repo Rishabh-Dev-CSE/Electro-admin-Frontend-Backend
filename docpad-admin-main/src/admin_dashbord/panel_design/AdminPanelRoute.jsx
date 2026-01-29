@@ -63,7 +63,7 @@ const EcomAdminPanel = () => {
         <div className="px-6 py-5 border-b border-white/10 flex justify-between items-center">
           <h2 className="text-xl font-extrabold tracking-wide
             bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            Parts Arthkarya Admin 
+            Arthkarya Admin 
           </h2>
 
           <button
@@ -167,16 +167,14 @@ const EcomAdminPanel = () => {
             <p className="hidden sm:block text-sm text-gray-300">
               <span className="text-blue-400 font-semibold">
                 {user.username}
-              </span>{" "}
-              <span className="text-gray-500 text-xs capitalize">
-                ({user.role})
               </span>
+            
             </p>
           )}
         </header>
 
         {/* CONTENT */}
-        <section className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <section className="flex-1 text-black bg-white overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </section>
       </main>
