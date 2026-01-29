@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiUpdate } from "../../utils/api";
+import StatCard from "../dashboard/StatCard";
 
 export default function Reviews() {
   const [reviews, setReviews] = useState([]);
+  const [total, setTotalReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
 
@@ -11,13 +13,13 @@ export default function Reviews() {
     try {
       setLoading(true);
       const res = await apiGet("/api/admin/reviews/");
-
       // 🔥 FILTER: only pending & rejected
-      const filtered = (res.data || []).filter(
+      const filtered = (res.reviews || []).filter(
         r => r.status !== "approved"
       );
 
       setReviews(filtered);
+      setTotalReviews(res.count)
     } catch (err) {
       console.error("Failed to fetch reviews", err);
     } finally {
@@ -49,6 +51,10 @@ export default function Reviews() {
 
   return (
     <div className="bg-white rounded-xl shadow p-6 text-black">
+      <div className="h-full w-[150px] " >
+
+        <StatCard title={"Total Reviews"} type="delivered" value={total} />
+      </div>
       <h2 className="text-xl font-bold mb-4">Product Reviews</h2>
 
       {loading ? (
