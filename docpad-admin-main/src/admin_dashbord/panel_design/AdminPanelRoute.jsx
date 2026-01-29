@@ -14,6 +14,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
+
 const EcomAdminPanel = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,7 +112,7 @@ const EcomAdminPanel = () => {
             <div className="flex items-center gap-3 mb-4">
               {user.image ? (
                 <img
-                  src={user.image}
+                  src={"http://localhost:8000"+user.image}
                   alt="profile"
                   className="w-10 h-10 rounded-full border border-blue-500/40"
                 />
@@ -123,7 +124,7 @@ const EcomAdminPanel = () => {
                 <p className="text-sm font-semibold text-white">
                   {user.username}
                 </p>
-                <p className="text-xs text-gray-400 capitalize">
+                <p className="text-xs text-red-400 capitalize">
                   {user.role}
                 </p>
               </div>
@@ -166,7 +167,7 @@ const EcomAdminPanel = () => {
           {user && (
             <p className="hidden sm:block text-sm text-gray-300">
               <span className="text-blue-400 font-semibold">
-                {user.username}
+                Name:- {user.username} <span className="text-red-500"> Role:- {user.role} </span>
               </span>
             
             </p>
