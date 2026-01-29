@@ -2,6 +2,7 @@ const BASE_URL = 'http://127.0.0.1:8000'
 
 export async function apiGet(url) {
   const token = localStorage.getItem("access");
+  console.log(token)
   // if (!token) throw new Error("No token found");
   let res = await fetch(`${BASE_URL}${url}`, {
     headers: {
@@ -101,8 +102,8 @@ export async function apiPostForm(url, formData, method = "POST") {
 
   let res = await fetch(`${BASE_URL}${url}`, {
     method,
-    headers,          // ❌ NO Content-Type here
-    body: formData,   // ✅ browser sets boundary itself
+    headers,          //  NO Content-Type here
+    body: formData,   //  browser sets boundary itself
   });
 
   if (res.status === 401) {
