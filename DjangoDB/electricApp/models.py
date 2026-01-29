@@ -76,7 +76,6 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
 
-
 class Product(models.Model):
     # Relations
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
@@ -109,13 +108,8 @@ class Product(models.Model):
     def __str__(self):
         return self.name  
 
-
 class ProductSpecification(models.Model):
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name="specifications"
-    )
+    product = models.ForeignKey(Product,on_delete=models.CASCADE,related_name="specifications")
     key = models.CharField(max_length=150)
     value = models.CharField(max_length=255)
 
@@ -123,10 +117,7 @@ class ProductSpecification(models.Model):
         return f"{self.key}: {self.value}"
 
 class ProductImage(models.Model):
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='images', blank=True
+    product = models.ForeignKey( Product, on_delete=models.CASCADE, related_name='images', blank=True
     )
     image = models.ImageField(upload_to='products/gallery/')
     alt_text = models.CharField(max_length=255, blank=True)
@@ -137,7 +128,6 @@ class ProductImage(models.Model):
     
 class Order(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     ORDER_STATUS = (
         ("Pending", "Pending"),
         ("Accept", "Accept"),
@@ -156,6 +146,7 @@ class Order(models.Model):
     order_id = models.CharField(max_length=20, unique=True)
     customer_name = models.CharField(max_length=100)
     customer_email = models.EmailField(blank=True, null=True)
+    contact_number = models.CharField(max_length=15,default="00000 00000")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2) 
     qty = models.IntegerField(default=1)
 
@@ -170,12 +161,12 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
-    product_name = models.CharField(max_length=255)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return self.product_name
+        return f"{self.product.name} ({self.quantity})"
 
 class ProductReview(models.Model):
     STATUS_CHOICES = (
@@ -207,11 +198,23 @@ class ProductReview(models.Model):
 
 class WishList(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    product = models.OneToOneField(Product, on_delete=models.CASCADE)
-
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.product
+    class Meta:
+        unique_together = ("user", "product")
 
-    
+    def __str__(self):
+        return f"{self.user} - {self.product.name}"
+
+class Cart(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "product")
+
+    def __str__(self):
+        return f"{self.user} - {self.product.name} ({self.quantity})"

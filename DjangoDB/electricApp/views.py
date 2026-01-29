@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.conf import settings 
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
@@ -24,17 +25,70 @@ from decimal import Decimal
 from .models import *
 
 
+# =============== HERE IS CODE SEQUENCE ===============
+# AUTH & USER
+# loginUser                → Admin login (JWT + refresh cookie)
+# signupUser               → User registration
+# refresh_token_view       → Access token refresh
+# set_internal_cookie      → Internal cookie for client-side access
+# get_users                → Admin: list all non-admin users
+
+# CATEGORY / SUBCATEGORY / BRAND
+# add_category             → Admin: add category
+# categories               → Admin / internal client: list categories
+# add_subcategory           → GET: list subcategory | POST: add subcategory
+# delete_category           → Admin: delete category
+# delete_subcategory        → Admin: delete subcategory
+# add_brands                → Admin: add brand
+# get_brands                → Admin / internal client: list brands
+# delete_brand              → Admin: delete brand
+
+# PRODUCTS
+# add_product               → Admin: create product with images & specs
+# products_list             → List all products
+# product_detail            → Single product details
+# product_update            → Admin: update product
+# delete_product            → Admin: delete product
+
+# ORDERS
+# create_order              → Create new order
+# admin_orders              → Admin: list all orders
+# update_order_status       → Admin: update order status
+# admin_order_detail        → Admin: order details
+# download_parcel_label     → Generate parcel label PDF
+
+# ACCOUNTING
+# accounting_dashboard      → Sales & profit dashboard
+# accounting_export_csv     → Export accounting CSV
+# accounting_export_pdf     → Export accounting PDF
+
+# ORDERS ANALYTICS
+# orders_dashboard          → Orders KPIs & charts
+# orders_export_csv         → Orders CSV export
+# orders_export_pdf         → Orders PDF export
+
+# MAIN DASHBOARD
+# dashboard_overview        → Complete admin dashboard overview
+# ================================================
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def loginUser(request):
     username = request.data.get("username")
     password = request.data.get("password")
+    role = request.data.get('role')
     
+    if not role:
+        return Response({"error":"Role is missing "}, status=400)
+    
+    if role != 'admin':
+        return Response({'error':"role argument error "}, status=401)
 
     if not username or not password:
         return Response({"error": "Username and password required"}, status=400)
 
-    user = authenticate(username=username, password=password)
+    user = authenticate(username=username, password=password, role=role)
     if not user:
         return Response({"error": "Invalid credentials"}, status=401)
 
@@ -66,7 +120,7 @@ def loginUser(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def signupUser(request):
-    print('hello')
+    
     username = request.data.get("username")
     email = request.data.get("email")
     password = request.data.get("password")
@@ -98,6 +152,24 @@ def refresh_token_view(request):
         return Response({"access": str(token.access_token)})
     except Exception:
         return Response({"error": "Invalid refresh token"}, status=401)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def set_internal_cookie(request):
+    response = Response({"message": "cookie set"})
+
+    response.set_cookie(
+        key=settings.COOKIE_NAME_KEY,
+        value=settings.INTERNAL_SECRET_VALUE,
+        httponly=True,     # JS se hidden
+        secure=not settings.DEBUG,   # LOCAL: False | PROD: True
+        samesite="Lax", 
+        # secure=True,       # HTTPS only
+        # samesite="Strict", # external sites blocked
+        max_age=60 * 60 * 24  # 1 day
+    )
+
+    return response
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -150,10 +222,21 @@ def add_category(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def categories(request):
-    if request.user.role != "admin":
-          return Response(
-            {"error": " Admin Role error"},
-            status=status.HTTP_400_BAD_REQUEST
+
+    is_admin = (
+        request.user.is_authenticated
+        and getattr(request.user, "role", None) == "admin"
+    )
+
+    has_internal_cookie = (
+        request.COOKIES.get(settings.COOKIE_NAME_KEY)
+        == settings.INTERNAL_SECRET_VALUE
+    )
+
+    if not (is_admin or has_internal_cookie):
+        return Response(
+            {"error": "Unauthorized"},
+            status=status.HTTP_403_FORBIDDEN
         )
 
     data = []
@@ -163,14 +246,31 @@ def categories(request):
             "name": cat.name,
         })
 
-    return Response({'data':data})
+    return Response({"data": data})
+
 
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def add_subcategory(request):
     
     # ---------- GET : list subcategories ----------
     if request.method == 'GET':
+        is_admin = (
+            request.user.is_authenticated
+            and getattr(request.user, "role", None) == "admin"
+        )
+
+        has_internal_cookie = (
+            request.COOKIES.get(settings.COOKIE_NAME_KEY)
+            == settings.INTERNAL_SECRET_VALUE
+        )
+
+        if not (is_admin or has_internal_cookie):
+            return Response(
+                {"error": "Unauthorized"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         data = []
         for sub in Subcategory.objects.select_related('category').all():
             data.append({
@@ -301,10 +401,25 @@ def add_brands(request):
         )
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_brands(request):
-       # ---------- GET : list subcategories ----------
+       # ---------- GET : list subcategories ---------- 
     if request.method == 'GET':
+        is_admin = (
+            request.user.is_authenticated
+            and getattr(request.user, "role", None) == "admin"
+        )
+
+        has_internal_cookie = (
+            request.COOKIES.get(settings.COOKIE_NAME_KEY)
+            == settings.INTERNAL_SECRET_VALUE
+        )
+
+        if not (is_admin or has_internal_cookie):
+            return Response(
+                {"error": "Unauthorized"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         data = []
         for brd in Brand.objects.select_related('category').all():
             data.append({
@@ -331,9 +446,6 @@ def delete_brand(request, pk):
         return Response({"message": "Brand deleted"})
     except Brand.DoesNotExist:
         return Response({"error": "Brand not found"}, status=404)
-
-
-
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -419,33 +531,32 @@ def add_product(request):
   
 @api_view(["GET"])
 def products_list(request):
-    if request.user.role != "admin":
-          return Response(
-            {"error": " Admin Role error"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
+
     products = Product.objects.select_related("category").all().order_by("-id")
     data = []
     for p in products:
-        data.append({
-            "id": p.id,
-            "name": p.name,
-            "price": p.price,
-            "stock": p.stock,
-            "is_active": p.is_active,
-            "category": {
-                "id": p.category.id,
-                "name": p.category.name
-            },
-            "image": p.image.url if p.image else None,
-        })
+            data.append({
+                "id": p.id,
+                "name": p.name,
+                "price": p.price,
+                "stock": p.stock,
+                "is_active": p.is_active,
+                "category": {
+                    "id": p.category.id,
+                    "name": p.category.name
+                },
+                 "subcategory": {
+                    "id": p.subcategory.id,
+                    "name": p.subcategory.name
+                },
+                "image": p.image.url if p.image else None,
+            })
 
     return Response({"data": data})
 
 @api_view(["GET"])
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+def product_detail(request, id):
+    product = get_object_or_404(Product, id=id)
 
     specs = [
         {"key": s.key, "value": s.value}
@@ -466,6 +577,8 @@ def product_detail(request, pk):
         "name": product.name,
         "price": product.price,
         "stock": product.stock,
+        "sku":product.sku,
+        "part_number": product.part_number,
         "is_active": product.is_active,
         "category": {
             "id": product.category.id,
@@ -477,6 +590,8 @@ def product_detail(request, pk):
         },
         "description": product.description,
         "specifications": specs,
+        "short_description":product.short_description,
+        "datasheet_url": product.datasheet_url,
         "images": images,
     }
 
@@ -501,8 +616,6 @@ def product_update(request, pk):
     product.save()
     return Response({'message':"product updated "})
 
- 
-    
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_product(request, pk):
@@ -517,97 +630,186 @@ def generate_order_id():
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def create_order(request):
-    user = request.user  
+    user = request.user
 
     customer_name = request.data.get("customer_name")
     customer_email = request.data.get("customer_email")
+    contact_number = request.data.get('contact_number')
     payment_status = request.data.get("payment_status", "Pending")
-    items = request.data.get("items", [])
+    address = request.data.get("address", "-")
+    items = request.data.get("items")
 
-    if not customer_name or not items:
+    # ---------- BASIC VALIDATION ----------
+    if not customer_name:
         return Response(
-            {"error": "Customer name and items are required"},
+            {"error": "Customer name is required"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # 🔹 Calculate total
-    total_amount = 0
-    for i in items:
-        total_amount += float(i["price"]) * int(i["quantity"])
+    if not items or not isinstance(items, list):
+        return Response(
+            {"error": "Items must be a non-empty list"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-    # 🔹 Create Order
+    # ---------- MERGE SAME PRODUCT IDS ----------
+    merged_items = {}
+    for item in items:
+        product_id = item.get("product_id")
+        quantity = item.get("quantity")
+
+        if not product_id or not quantity:
+            return Response(
+                {"error": "Each item must have product_id and quantity"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                raise ValueError
+        except ValueError:
+            return Response(
+                {"error": "Quantity must be a positive number"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # merge quantity if same product_id
+        merged_items[product_id] = merged_items.get(product_id, 0) + quantity
+
+    total_amount = 0
+    total_qty = 0
+    order_items_data = []
+
+    # ---------- VALIDATE PRODUCTS + STOCK ----------
+    for product_id, quantity in merged_items.items():
+        try:
+            product = Product.objects.get(id=product_id, is_active=True)
+        except Product.DoesNotExist:
+            return Response(
+                {"error": f"Product with id {product_id} not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if product.stock < quantity:
+            return Response(
+                {"error": f"Insufficient stock for {product.name}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        item_total = product.price * quantity
+        total_amount += item_total
+        total_qty += quantity
+
+        order_items_data.append({
+            "product": product,
+            "price": product.price,
+            "quantity": quantity
+        })
+
+    # ---------- CREATE ORDER ----------
     order = Order.objects.create(
         user=user,
         order_id=generate_order_id(),
         customer_name=customer_name,
         customer_email=customer_email,
         total_amount=total_amount,
+        contact_number = contact_number,
+        qty=total_qty,
         payment_status=payment_status,
-        order_status="Pending"
+        order_status="Pending",
+        address=address
     )
 
-    # 🔹 Create Order Items
-    for i in items:
+    # ---------- CREATE ORDER ITEMS ----------
+    for data in order_items_data:
         OrderItem.objects.create(
             order=order,
-            product_name=i["product_name"],
-            price=i["price"],
-            quantity=i["quantity"]
+            product=data["product"],
+            price=data["price"],
+            quantity=data["quantity"]
         )
+
+        # reduce stock
+        product = data["product"]
+        product.stock -= data["quantity"]
+        product.save(update_fields=["stock"])
 
     return Response(
         {
             "message": "Order created successfully",
-            "order_id": order.order_id
+            "order_id": order.order_id,
+            "total_amount": float(total_amount),
+            "total_qty": total_qty
         },
         status=status.HTTP_201_CREATED
     )
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def admin_orders(request):
     if request.user.role != "admin":
-          return Response(
-            {"error": " Admin Role error"},
-            status=status.HTTP_400_BAD_REQUEST
+        return Response(
+            {"error": "Admin role required"},
+            status=status.HTTP_403_FORBIDDEN
         )
 
-    orders = Order.objects.all().order_by("-created_at")
+    # Prefetch items + products (PERFORMANCE FIX)
+    orders = (
+        Order.objects
+        .prefetch_related("items__product")
+        .order_by("-created_at")
+    )
 
     data = []
 
     for o in orders:
-        items = OrderItem.objects.filter(order=o)
+        items_data = []
+        total_qty = 0
+        product_image = None
 
-        total_qty = sum(i.quantity for i in items) 
+        for item in o.items.all():
+            total_qty += item.quantity
 
-        product_list = []
-        for i in items:
-            product_list.append({
-                "product_name": i.product_name,
-                "price": float(i.price),
-                "quantity": i.quantity,
+            # first product image for preview
+            if not product_image and item.product.image:
+                product_image = request.build_absolute_uri(item.product.image.url)
+
+            items_data.append({
+                "product_id": item.product.id,
+                "product_name": item.product.name,
+                "price": float(item.price),
+                "quantity": item.quantity,
+                "image": (
+                    request.build_absolute_uri(item.product.image.url)
+                    if item.product.image else None
+                )
             })
 
         data.append({
             "id": o.id,
-            "product_image":"http://localhost:8000"+o.product.image.url if o.product.image else None,
+            "order_id": o.order_id,
+
             "customer": o.customer_name,
             "customer_email": o.customer_email,
-            "order_id":o.order_id,
+            "address": o.address,
+
             "total": float(o.total_amount),
             "total_qty": total_qty,
 
             "payment_status": o.payment_status,
             "status": o.order_status,
 
-            "address": o.address,
+            "product_image": product_image,  # order thumbnail
             "date": o.created_at.strftime("%d %b %Y"),
 
-            # ORDER ITEMS
-            "items": product_list,
+            "items": items_data
         })
 
-    return Response({"data": data})
+    return Response({
+        "count": len(data),
+        "data": data
+    })
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -626,114 +828,140 @@ def update_order_status(request, id):
     return Response({"message": "Order status updated"})
 
 @api_view(["GET"])
-def admin_order_detail(request, id):
-    order = Order.objects.get(id=id)
-    if request.user.role != "admin":
-          return Response(
-            {"error": " Admin Role error"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+@permission_classes([IsAuthenticated])
+def client_order_detail(request):
+    orders = (
+        Order.objects
+        .filter(user=request.user)
+        .prefetch_related("items__product")
+        .order_by("-created_at")
+    )
 
-    return Response({
-        "order_id": order.order_id,
-        "customer": order.customer_name,
-        "email": order.customer_email,
-        "total": float(order.total_amount),
-        "payment": order.payment_status,
-        "status": order.order_status,
-        "created_at": order.created_at.strftime("%d %b %Y"),
-        "items": [
-            {
-                "product": i.product_name,
+    data = []
+
+    for order in orders:
+        items = []
+        for i in order.items.all():
+            items.append({
+                "product_id": i.product.id,
+                "product": i.product.name,
                 "price": float(i.price),
                 "quantity": i.quantity,
-            }
-            for i in order.items.all()
-        ]
+                "image": (
+                    request.build_absolute_uri(i.product.image.url)
+                    if i.product.image else None
+                )
+            })
+
+        data.append({
+            "id": order.id,
+            "order_id": order.order_id,
+            "customer": order.customer_name,
+            "email": order.customer_email,
+            "total": float(order.total_amount),
+            "payment": order.payment_status,
+            "status": order.order_status,
+            "created_at": order.created_at.strftime("%d %b %Y"),
+            "items": items
+        })
+
+    return Response({
+        "count": len(data),
+        "data": data
     })
 
 @api_view(["GET"])
+@permission_classes([AllowAny])   # because PDF is public for now
 def download_parcel_label(request, id):
-
-    order = Order.objects.get(id=id)
-    items = OrderItem.objects.filter(order=order)
+    try:
+        order = Order.objects.prefetch_related("items__product").get(id=id)
+    except Order.DoesNotExist:
+        return Response({"error": "Order not found"}, status=404)
 
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="parcel_{order.order_id}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="parcel_{order.order_id}.pdf"'
+    )
 
     c = canvas.Canvas(response, pagesize=A6)
     width, height = A6
 
-    y = height - 8 * mm
+    x_margin = 6 * mm
+    y = height - 10 * mm
 
-    def draw(text, size=9, bold=False):
+    def text(txt, size=9, bold=False):
         nonlocal y
         font = "Helvetica-Bold" if bold else "Helvetica"
         c.setFont(font, size)
-        c.drawString(6 * mm, y, text)
-        y -= 5 * mm
+        c.drawString(x_margin, y, txt)
+        y -= 4.5 * mm
 
-    # ===== LOGO =====
-    try:
-        logo = ImageReader("media/logo.png")  # apna logo path
-        c.drawImage(logo, width - 40 * mm, height - 25 * mm, 30 * mm, 15 * mm)
-    except:
-        pass
+    # ================= HEADER =================
+    c.setFillColorRGB(0.1, 0.1, 0.1)
+    c.rect(0, height - 18 * mm, width, 18 * mm, fill=1)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawCentredString(width / 2, height - 12 * mm, "PARCEL SHIPPING LABEL")
+    c.setFillColorRGB(0, 0, 0)
 
-    # ===== TITLE =====
-    draw("PARCEL SHIPPING LABEL", 11, True)
+    y = height - 24 * mm
+
+    # ================= DATA TO ENCODE =================
+    # 👇 VERY IMPORTANT: URL so scanner shows data
+    order_url = f"http://localhost:5173/admin/orders/{order.id}"
+
+    # ================= BARCODE =================
+    barcode = code128.Code128(
+        order_url,
+        barHeight=12 * mm,
+        barWidth=0.4
+    )
+    barcode.drawOn(c, x_margin, y - 12 * mm)
+    y -= 16 * mm
+
+    # ================= ORDER INFO =================
+    text(f"Order ID : {order.order_id}", bold=True)
+    text(f"Date     : {order.created_at.strftime('%d %b %Y')}")
+    text(f"Payment  : {order.payment_status}")
     y -= 2 * mm
 
-    # ===== BARCODE =====
-    barcode = code128.Code128(order.order_id, barHeight=10 * mm)
-    barcode.drawOn(c, 6 * mm, y - 12 * mm)
-    y -= 18 * mm
-
-    # ===== ORDER INFO =====
-    draw(f"Order ID: {order.order_id}", bold=True)
-    draw(f"Order Date: {order.created_at.strftime('%d %b %Y')}")
-    draw(f"Payment: {order.payment_status}")
+    # ================= CUSTOMER =================
+    text("Customer Details", 10, True)
+    text(f"Name  : {order.customer_name}")
+    text(f"Email : {order.customer_email or '-'}")
     y -= 2 * mm
 
-    # ===== CUSTOMER =====
-    draw("Customer Details", 10, True)
-    draw(f"Name: {order.customer_name}")
-    draw(f"Email: {order.customer_email or '-'}")
-    y -= 2 * mm
-
-    # ===== ADDRESS =====
-    draw("Shipping Address", 10, True)
+    # ================= ADDRESS =================
+    text("Shipping Address", 10, True)
     for line in order.address.split(","):
-        draw(line.strip())
+        text(line.strip(), 8)
     y -= 2 * mm
 
-    # ===== ITEMS =====
-    draw("Items", 10, True)
-    for item in items:
-        draw(f"{item.product_name}  x{item.quantity}")
+    # ================= ITEMS =================
+    text("Items", 10, True)
+    for item in order.items.all():
+        text(f"- {item.product.name} x{item.quantity}", 8)
+
     y -= 2 * mm
+    text(f"Total Qty : {order.qty}", bold=True)
+    text(f"Amount    : ₹{order.total_amount}", bold=True)
 
-    draw(f"Total Qty: {order.qty}", bold=True)
-    draw(f"Amount: ₹{order.total_amount}", bold=True)
-
-    # ===== QR CODE =====
-    qr_data = f"ORDER:{order.order_id}"
-    qr = qrcode.make(qr_data)
-    qr_buffer = io.BytesIO()
-    qr.save(qr_buffer)
-    qr_buffer.seek(0)
+    # ================= QR CODE =================
+    qr = qrcode.make(order_url)
+    qr_buf = io.BytesIO()
+    qr.save(qr_buf)
+    qr_buf.seek(0)
 
     c.drawImage(
-        ImageReader(qr_buffer),
-        width - 35 * mm,
+        ImageReader(qr_buf),
+        width - 32 * mm,
         6 * mm,
-        28 * mm,
-        28 * mm
+        26 * mm,
+        26 * mm
     )
 
     c.showPage()
     c.save()
-
     return response
 
 @api_view(["GET"])
@@ -874,13 +1102,12 @@ def accounting_export_pdf(request):
     c.save()
     return response
 
+
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def orders_dashboard(request):
-    if request.user.role != "admin":
-          return Response(
-            {"error": " Admin Role error"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    if getattr(request.user, "role", None) != "admin":
+        return Response({"error": "Admin only"}, status=403)
 
     month = request.GET.get("month")
     year = request.GET.get("year")
@@ -893,44 +1120,61 @@ def orders_dashboard(request):
             created_at__year=int(year),
         )
 
-    # ===== KPIs =====
+    # ================= KPIs =================
     kpis = {
         "total_orders": orders.count(),
+        "pending": orders.filter(order_status="Pending").count(),
         "delivered": orders.filter(order_status="Delivered").count(),
         "cancelled": orders.filter(order_status="Cancelled").count(),
-        "pending": orders.filter(order_status="Pending").count(),
     }
 
-    # ===== Daily Sales =====
+    # ================= DAILY SALES =================
     daily = (
-        orders.filter(order_status="Delivered")
+        orders
+        .filter(order_status="Delivered")
         .values("created_at__date")
         .annotate(total=Sum("total_amount"))
         .order_by("created_at__date")
     )
 
-    daily_labels = [d["created_at__date"].strftime("%d %b") for d in daily]
-    daily_data = [float(d["total"]) for d in daily]
-
-    # ===== Product-wise =====
-    products = (
+    # ================= TOP PRODUCTS =================
+    top_products = (
         OrderItem.objects
-        .values("product_name")
+        .filter(order__in=orders)
+        .values("product__name")
         .annotate(qty=Sum("quantity"))
         .order_by("-qty")[:5]
     )
 
-    return Response({
+    return Response({"data":{
         "kpis": kpis,
         "daily_sales": {
-            "labels": daily_labels,
-            "data": daily_data,
+            "labels": [d["created_at__date"].strftime("%d %b") for d in daily],
+            "data": [float(d["total"]) for d in daily],
         },
-        "top_products": list(products),
-    })
+        "top_products": [
+            {
+                "product_name": p["product__name"],
+                "qty": p["qty"]
+            }
+            for p in top_products
+        ],
+    }})
+
 
 @api_view(["GET"])
 def orders_export_csv(request):
+    month = request.GET.get("month")
+    year = request.GET.get("year")
+
+    orders = Order.objects.prefetch_related("items__product")
+
+    if month and year:
+        orders = orders.filter(
+            created_at__month=int(month),
+            created_at__year=int(year),
+        )
+
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="orders_report.csv"'
 
@@ -945,13 +1189,13 @@ def orders_export_csv(request):
         "Amount",
     ])
 
-    for order in Order.objects.all():
+    for order in orders:
         for item in order.items.all():
             writer.writerow([
                 order.order_id,
                 order.created_at.strftime("%d-%m-%Y"),
                 order.customer_name,
-                item.product_name,
+                item.product.name,      # ✅ FIX HERE
                 item.quantity,
                 order.order_status,
                 float(order.total_amount),
