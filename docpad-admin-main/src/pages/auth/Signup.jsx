@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { apiPost, apiPostForm } from "../../utils/api";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function Signup() {
@@ -12,6 +12,13 @@ export default function Signup() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("access");
+
+  if (token) {
+    return <Navigate to="/admin/dashboard/" replace />;
+  }
+
+
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
