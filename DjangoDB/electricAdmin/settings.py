@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'electricApp',
     'userApp',
+    'clientSide',
 
 ]
 
@@ -59,6 +60,7 @@ AUTH_USER_MODEL = "electricApp.CustomUser"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5500",
+    "http://localhost:5501",
     "https://lab.arthkarya.com"
 ]
  
@@ -173,5 +175,11 @@ ADMIN_EMAIL = "arthKarya@gmail.com"
 
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.ModelBackend', 
 ]
+
+# api secret key
+INTERNAL_SECRET_VALUE = "rishabhshakya@9336"
+COOKIE_NAME_KEY = "cookies-client"
+
+
