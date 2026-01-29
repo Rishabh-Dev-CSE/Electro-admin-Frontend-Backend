@@ -2,12 +2,20 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { apiPost } from "../../utils/api";
 import { useNavigate } from "react-router-dom";
+import SuccessErrorCard from "../../components/Success_Error_model";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "",role:"admin" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [userauth, setAuth] =useState("");
+  const [modal, setModal] = useState({
+    open: false,
+    type: "",
+    message: "",
+  });
+
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,19 +27,46 @@ export default function Login() {
 
     try {
       const res = await apiPost("/api/login/", form);
-      alert(res.message)
+      setAuth(res.user.is_staff)
       localStorage.setItem("access", res.access);
       localStorage.setItem("user", JSON.stringify(res.user));
-      navigate(res.user.is_staff ? "/admin/dashboard" : "/");
+
+      setModal({
+        open: true,
+        type: "success",
+        message: res.message || "Login successful",
+      });
+
     } catch (err) {
-      setError(err.error || "Invalid credentials");
+      setModal({
+        open: true,
+        type: "error",
+        message: err.error || "Invalid credentials",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-slate-100 to-indigo-100 px-4">
+      {modal.open && (
+        <SuccessErrorCard
+          type={modal.type}
+          title={modal.type === "success" ? "Success" : "Error"}
+          message={modal.message}
+          buttonText={modal.type === "success" ? "Continue" : "Try again"}
+          onClick={() => {
+            setModal({ open: false, type: "", message: "" });
+
+            if (modal.type === "success") {
+              const user = JSON.parse(localStorage.getItem("user"));
+              window.location.href  = (user?.is_staff ? "/admin/dashboard" : "/");
+            }
+          }}
+        />
+      )}
 
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
@@ -52,17 +87,17 @@ export default function Login() {
             alt="Logo"
             className="w-20 h-20 object-contain mb-6 bg-white rounded-2xl p-3"
           />
-            {/* SVG  */}
+          {/* SVG  */}
           <h2 className="text-4xl font-bold tracking-wide">
             <svg width="380" height="120" viewBox="0 0 380 120" xmlns="http://www.w3.org/2000/svg">
 
-           
+
               <ellipse cx="64" cy="96" rx="40" ry="10" fill="#00000035" />
 
-           
+
               <rect x="20" y="20" width="88" height="88" rx="20" fill="url(#chipOuter)" />
 
-          
+
               <rect x="30" y="30" width="68" height="68" rx="16" fill="url(#chipInner)" />
 
               <g stroke="#38BDF8" stroke-width="3" stroke-linecap="round">
@@ -75,7 +110,7 @@ export default function Login() {
                 <line x1="108" y1="80" x2="116" y2="80" />
               </g>
 
-            
+
               <g stroke="#2DD4BF" stroke-width="3" fill="none" stroke-linecap="round">
                 <path d="M54 56 H72 V40">
                   <animate
@@ -116,12 +151,12 @@ export default function Login() {
                 ARTHKARYA
               </text>
 
-           
+
               <text x="140" y="104" font-size="11" fill="#64748B" letter-spacing="1.2">
                 POWERING ELECTRONICS
               </text>
 
-           
+
               <defs>
 
                 <linearGradient id="chipOuter" x1="0" y1="0" x2="1" y2="1">
@@ -230,7 +265,7 @@ export default function Login() {
           >
             {loading ? "Logging in..." : "Log in"}
           </button>
-          
+
           {/* FOOTER */}
           <p className="text-xs text-gray-500 mt-4 text-center">
             Don't have an account?{" "}
