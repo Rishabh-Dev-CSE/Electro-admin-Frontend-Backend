@@ -11,8 +11,37 @@ from django.utils.text import slugify
 from electricApp.models import *
 from django.conf import settings
 from django.core.mail import send_mail
+from smtplib import SMTPException
+
+# =============== HERE IS CODE SEQUENCE ===============
+
+# AUTH / LOGIN
+# customerUserLogin        → Customer login (JWT + refresh cookie)
+# auth_user                → Get authenticated user (admin / client)
+
+# USER MANAGEMENT (ADMIN)
+# add_user                 → Admin: create new user
+# get_users                → Admin: list all users (except admin)
+# user_update              → Admin: update user details
+# user_delete              → Admin: delete user
+
+# ===================== END USER SECTION =====================
+
+# REVIEWS (PRODUCT)
+# submit_review            → Client: submit product review (pending)
+# admin_reviews             → Admin: view all reviews (approve / reject)
+# client_reviews            → Client: view approved reviews only
+# update_review_status      → Admin: update review status
+
+# ===================== END REVIEWS =====================
+
+# EMAIL / ENQUIRY
+# mail_data                → Send enquiry email to admin
+
+# ==========================================================
 
 
+# login custmer ...........
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def customerUserLogin(request):
@@ -91,6 +120,7 @@ def customerUserLogin(request):
 
     return response
 
+# get autherized admin and client side also........
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def auth_user(request):
@@ -105,7 +135,7 @@ def auth_user(request):
         }
     })
 
-
+# add user admin site .............
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_user(request): 
@@ -139,11 +169,10 @@ def add_user(request):
 
     return Response({"status": True, "message": "User created"}, status=201)
 
-# Create your views here.
+# get all user and render to admin site..........
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_users(request):
-
     
     if request.user.role != 'admin':
         return Response(
@@ -172,7 +201,7 @@ def get_users(request):
         "users": data
     })
 
-
+# update user .........
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def user_update(request, pk):
@@ -209,6 +238,7 @@ def user_update(request, pk):
         "message": "User updated successfully"
     })
 
+# delete user .......
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def user_delete(request, pk):
@@ -224,8 +254,11 @@ def user_delete(request, pk):
     user.delete()
     return Response({"status": True, "message": "User deleted"})
 
+# =====================End here===================
+
 # ==================Reviews=======================
 
+# create from client side reviews 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def submit_review(request):
@@ -248,35 +281,74 @@ def submit_review(request):
         "message": "Review submitted, waiting for approval"
     })
 
+# get all product reviews to admin site for (aproved and reject) 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def admin_reviews(request):
-    if request.user.role != "admin":
-        return Response({"error": "Unauthorized"}, status=403)
+    is_admin = (
+        request.user.is_authenticated
+        and getattr(request.user, "role", None) == "admin"
+    )
 
-    reviews = ProductReview.objects.select_related("product", "user")
+    has_internal_cookie = (
+        request.COOKIES.get(settings.COOKIE_NAME_KEY)
+        == settings.INTERNAL_SECRET_VALUE
+    )
+
+    if not (is_admin or has_internal_cookie):
+        return Response(
+            {"error": "Unauthorized"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    reviews = ProductReview.objects.select_related(
+        "product", "user"
+    ).order_by("-created_at")
 
     data = [{
         "id": r.id,
+        "product_id": r.product.id,
         "product": r.product.name,
-        "user": r.user.username,
+        "user": r.user.username if r.user else "Guest",
         "rating": r.rating,
         "comment": r.comment,
-        "status": r.status
+        "status": r.status,
+        "date": r.created_at.strftime("%d %b %Y")
     } for r in reviews]
 
-    return Response({"data": data})
+    return Response({
+        "count": len(data),
+        "reviews": data
+    })
 
-
+# get all product and render to client side 
 @api_view(["GET"])
-def product_reviews(request, product_id):
+@permission_classes([AllowAny])
+def client_reviews(request):
+    is_admin = (
+            request.user.is_authenticated
+            and getattr(request.user, "role", None) == "admin"
+        )
+
+    has_internal_cookie = (
+            request.COOKIES.get(settings.COOKIE_NAME_KEY)
+            == settings.INTERNAL_SECRET_VALUE
+        )
+
+    if not (is_admin or has_internal_cookie):
+            return Response(
+                {"error": "Unauthorized"},
+                status=status.HTTP_403_FORBIDDEN
+            )
     reviews = ProductReview.objects.filter(
-        product_id=product_id,
         status="approved"
-    ).select_related("user")
+    ).select_related("product", "user").order_by("-created_at")
 
     data = [{
-        "user": r.user.username,
+        "id": r.id,
+        "product_id": r.product.id,
+        "product": r.product.name,
+        "user": r.user.username if r.user else "Guest",
         "rating": r.rating,
         "comment": r.comment,
         "date": r.created_at.strftime("%d %b %Y")
@@ -287,6 +359,7 @@ def product_reviews(request, product_id):
         "reviews": data
     })
 
+# admin update product reviews status (pending to aproved and rejected)
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_review_status(request, id):
@@ -300,9 +373,160 @@ def update_review_status(request, id):
 
     return Response({"message": "Review status updated"})
 
-from smtplib import SMTPException
+# ===============Reviews EDN ========================
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_to_wishlist(request):
+    product_id = request.data.get("product_id")
+    if not product_id:
+        return Response({"error": "product_id required"}, status=400)
+
+    product = get_object_or_404(Product, id=product_id)
+
+    wishlist, created = WishList.objects.get_or_create(
+        user=request.user,
+        product=product,
+    )
+
+    if not created:
+        return Response({"message": "Already in wishlist"})
+
+    return Response({"message": "Added to wishlist"})
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def wishlist_items(request):
+    items = WishList.objects.filter(user=request.user).select_related("product")
+
+    data = []
+    for i in items:
+        data.append({
+            "id": i.id,
+            "product_id": i.product.id,
+            "name": i.product.name,
+            "price": i.product.price,
+            "image": i.product.image.url if i.product.image else None,
+        })
+
+    return Response({"data": data})
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def remove_from_wishlist(request, product_id):
+    qs = WishList.objects.filter(
+        user=request.user,
+        id = product_id
+    )
+
+    if not qs.exists():
+        return Response(
+            {"error": "Product not found in wishlist"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    qs.delete()
+
+    return Response(
+        {"message": "Removed from wishlist"},
+        status=status.HTTP_200_OK
+    )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_to_cart(request):
+    product_id = request.data.get("product_id")
+    qty = int(request.data.get("quantity", 1))
+
+    if qty < 1:
+        return Response({"error": "Invalid quantity"}, status=400)
+
+    product = get_object_or_404(Product, id=product_id)
+
+    cart, created = Cart.objects.get_or_create(
+        user=request.user,
+        product=product
+    )
+
+    if not created:
+        cart.quantity += qty
+        cart.save()
+    else:
+        cart.quantity = qty
+        cart.save()
+
+    return Response({"message": "Added to cart"})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def cart_items(request):
+    items = Cart.objects.filter(user=request.user).select_related("product")
+
+    data = []
+    total = 0
+
+    for i in items:
+        subtotal = i.quantity * i.product.price
+        total += subtotal
+
+        data.append({
+            "id": i.id,
+            "product_id": i.product.id,
+            "name": i.product.name,
+            "price": float(i.product.price),
+            "quantity": i.quantity,
+            "subtotal": float(subtotal),
+            "image": i.product.image.url if i.product.image else None,
+        })
+
+    return Response({
+        "items": data,
+        "total": float(total)
+    })
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_cart_qty(request, cart_id):
+    qty = int(request.data.get("quantity"))
+
+    if qty < 1:
+        return Response({"error": "Quantity must be >= 1"}, status=400)
+
+    cart = get_object_or_404(
+        Cart,
+        user=request.user,
+        id=cart_id
+    )
+
+    cart.quantity = qty
+    cart.save()
+
+    return Response({"message": "Quantity updated"})
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def remove_from_cart(request, cart_id):
+    qs = Cart.objects.filter(
+        user=request.user,
+        id=cart_id
+    )
+
+    if not qs.exists():
+        return Response(
+            {"error": "Product not found in cart"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    qs.delete()
+
+    return Response(
+        {"message": "Removed from cart"},
+        status=status.HTTP_200_OK
+    )
+
+#==================== Send Email ====================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def mail_data(request):
