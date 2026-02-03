@@ -908,7 +908,7 @@ def download_parcel_label(request, id):
 
     # ================= DATA TO ENCODE =================
     # 👇 VERY IMPORTANT: URL so scanner shows data
-    order_url = f"http://localhost:5173/admin/orders/{order.id}"
+    order_url = f"https://www.lab.arthkarya.com/admin/orders/{order.id}"
 
     # ================= BARCODE =================
     barcode = code128.Code128(

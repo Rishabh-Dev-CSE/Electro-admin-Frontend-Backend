@@ -1,3 +1,3 @@
-const BASE_URL = 'https://localhost:8000/';
+const BASE_URL = 'https://www.lab.arthkarya.com';
 
 

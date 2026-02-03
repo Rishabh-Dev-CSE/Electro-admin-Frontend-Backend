@@ -112,7 +112,7 @@ const EcomAdminPanel = () => {
             <div className="flex items-center gap-3 mb-4">
               {user.image ? (
                 <img
-                  src={"http://localhost:8000"+user.image}
+                  src={"https://www.lab.arthkarya.com"+user.image}
                   alt="profile"
                   className="w-10 h-10 rounded-full border border-blue-500/40"
                 />

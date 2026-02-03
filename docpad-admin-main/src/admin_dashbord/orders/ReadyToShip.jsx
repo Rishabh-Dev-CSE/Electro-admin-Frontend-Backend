@@ -42,7 +42,7 @@ export default function ReadyToShip() {
         try {
             // 1️⃣ Download label (PDF)
             window.open(
-                `http://localhost:8000/api/orders/${orderId}/parcel-label/`,
+                `https://www.lab.arthkarya.com/api/orders/${orderId}/parcel-label/`,
                 "_blank"
             );
 

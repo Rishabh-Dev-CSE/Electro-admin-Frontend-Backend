@@ -80,14 +80,14 @@ export default function OrdersReport() {
   /* ================= EXPORT ================= */
   const downloadCSV = () => {
     window.open(
-      `http://localhost:8000/api/reports/orders/export-csv/?month=${filters.month}&year=${filters.year}`,
+      `https://www.lab.arthkarya.com/api/reports/orders/export-csv/?month=${filters.month}&year=${filters.year}`,
       "_blank"
     );
   };
 
   const downloadPDF = () => {
     window.open(
-      `http://localhost:8000/api/reports/orders/export-pdf/?month=${filters.month}&year=${filters.year}`,
+      `https://www.lab.arthkarya.com/api/reports/orders/export-pdf/?month=${filters.month}&year=${filters.year}`,
       "_blank"
     );
   };

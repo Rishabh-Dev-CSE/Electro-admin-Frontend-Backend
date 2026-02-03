@@ -88,13 +88,13 @@ export default function AccountingReport() {
 
         <div className="flex gap-2">
           <a
-            href={`http://localhost:8000/api/reports/accounting/export-csv/?month=${filters.month}&year=${filters.year}`}
+            href={`https://www.lab.arthkarya.com/api/reports/accounting/export-csv/?month=${filters.month}&year=${filters.year}`}
             className="px-3 py-2 bg-gray-800 text-white rounded text-sm"
           >
             Export CSV
           </a>
           <a
-            href={`http://localhost:8000/api/reports/accounting/export-pdf/?month=${filters.month}&year=${filters.year}`}
+            href={`https://www.lab.arthkarya.com/api/reports/accounting/export-pdf/?month=${filters.month}&year=${filters.year}`}
             className="px-3 py-2 bg-red-600 text-white rounded text-sm"
           >
             Export PDF

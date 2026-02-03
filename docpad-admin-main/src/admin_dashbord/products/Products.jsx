@@ -115,7 +115,7 @@ export default function Products() {
                 <tr key={p.id} className="border-b">
                   <td className="p-4 flex gap-3 items-center">
                     <img
-                      src={"http://localhost:8000" + p.image}
+                      src={"https://www.lab.arthkarya.com" + p.image}
                       className="w-12 h-12 rounded-lg object-cover"
                       alt=""
                     />
@@ -206,7 +206,7 @@ function ViewModal({ product, onClose }) {
       <div className="bg-white w-[420px] rounded-xl p-6 relative">
         <button onClick={onClose} className="absolute top-3 right-3">✕</button>
         <img
-          src={"http://localhost:8000" + product.image}
+          src={"https://www.lab.arthkarya.com" + product.image}
           className="w-full h-48 rounded-lg object-cover mb-4"
           alt=""
         />
