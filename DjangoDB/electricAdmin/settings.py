@@ -11,9 +11,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-h!=aksdg)+aqfy(ze45a^3ykmr+&p@nwli6up%42u+ly*yc7@s'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "lab.arthkarya.com",
+    "www.lab.arthkarya.com",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://lab.arthkarya.com",
+    "https://www.lab.arthkarya.com"
+]
+
 
 
 # Application definition
@@ -31,7 +40,6 @@ INSTALLED_APPS = [
     'electricApp',
     'userApp',
     'clientSide',
-
 ]
 
 MIDDLEWARE = [
@@ -57,13 +65,12 @@ REST_FRAMEWORK = {
 CORS_ALLOW_CREDENTIALS = True
 AUTH_USER_MODEL = "electricApp.CustomUser"
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5500",
-    "http://localhost:5501",
-    "https://lab.arthkarya.com"
+ALLOWED_HOSTS = [
+    "lab.arthkarya.com",
+    "www.lab.arthkarya.com",
+    "127.0.0.1",
+    "localhost"
 ]
- 
 
 TEMPLATES = [
     {
@@ -179,7 +186,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # api secret key
-INTERNAL_SECRET_VALUE = "rishabhshakya@9336"
+INTERNAL_SECRET_VALUE = "ejw1 rju@ kGf& &%we"
 COOKIE_NAME_KEY = "cookies-client"
 
 
