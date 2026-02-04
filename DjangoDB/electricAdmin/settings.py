@@ -23,9 +23,10 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://lab.arthkarya.com",
     "https://www.lab.arthkarya.com",
-    "arthkarya.netlify.app",
-    "electro-admin-frontend-backend.onrender.com",#testing remove it production
+    "https://arthkarya.netlify.app",
+    "https://electro-admin-frontend-backend.onrender.com",
 ]
+
 
 
 
