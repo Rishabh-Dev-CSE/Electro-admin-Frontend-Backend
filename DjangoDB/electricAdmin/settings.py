@@ -16,11 +16,13 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "lab.arthkarya.com",
     "www.lab.arthkarya.com",
+    "electro-admin-frontend-backend.onrender.com",# testing remove it production
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://lab.arthkarya.com",
     "https://www.lab.arthkarya.com"
+    "electro-admin-frontend-backend.onrender.com",#testing remove it production
 ]
 
 
@@ -69,7 +71,8 @@ ALLOWED_HOSTS = [
     "lab.arthkarya.com",
     "www.lab.arthkarya.com",
     "127.0.0.1",
-    "localhost"
+    "localhost",
+    "electro-admin-frontend-backend.onrender.com" #testing for 
 ]
 
 TEMPLATES = [
