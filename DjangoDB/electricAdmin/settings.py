@@ -16,9 +16,12 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "lab.arthkarya.com",
     "www.lab.arthkarya.com",
+    "127.0.0.1",
+    "localhost",
     "arthkarya.netlify.app",
-    "electro-admin-frontend-backend.onrender.com",# testing remove it production
+    "electro-admin-frontend-backend.onrender.com",
 ]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "https://lab.arthkarya.com",
@@ -28,9 +31,15 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-# =======================
-# CORS SETTINGS
-# =======================
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
 
 CORS_ALLOW_HEADERS = [
     "accept",
@@ -43,7 +52,6 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
-
 
 
 # Application definition
