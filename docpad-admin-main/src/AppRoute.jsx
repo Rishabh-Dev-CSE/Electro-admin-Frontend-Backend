@@ -19,7 +19,7 @@ import Reports from "./admin_dashbord/reports/Reports";
 import Reviews from "./admin_dashbord/reviews/Reviews";
 
 // Settings
-import SettingsLayout from "./admin_dashbord/Settings/Settings";
+import SettingsLayout from "./admin_dashbord/settings/Settings";
 import GeneralSettings from "./admin_dashbord/settings/GeneralSettings";
 import PaymentGateway from "./admin_dashbord/settings/PaymentGeteway";
 import ShippingSettings from "./admin_dashbord/settings/ShippingSettings";
