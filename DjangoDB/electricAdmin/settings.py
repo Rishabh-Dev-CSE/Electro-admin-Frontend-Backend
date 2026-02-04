@@ -16,12 +16,14 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "lab.arthkarya.com",
     "www.lab.arthkarya.com",
+    "arthkarya.netlify.app",
     "electro-admin-frontend-backend.onrender.com",# testing remove it production
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://lab.arthkarya.com",
     "https://www.lab.arthkarya.com",
+    "arthkarya.netlify.app",
     "electro-admin-frontend-backend.onrender.com",#testing remove it production
 ]
 
@@ -72,6 +74,7 @@ ALLOWED_HOSTS = [
     "www.lab.arthkarya.com",
     "127.0.0.1",
     "localhost",
+    "arthkarya.netlify.app",
     "electro-admin-frontend-backend.onrender.com" #testing for 
 ]
 
