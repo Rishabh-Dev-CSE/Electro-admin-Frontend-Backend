@@ -1,3 +1,3 @@
-const BASE_URL = 'https://www.lab.arthkarya.com';
+const BASE_URL = 'https://electro-admin-frontend-backend.onrender.com';
 
 

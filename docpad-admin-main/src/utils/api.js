@@ -1,4 +1,4 @@
-const BASE_URL = 'https://www.lab.arthkarya.com'
+const BASE_URL = 'https://electro-admin-frontend-backend.onrender.com'
 
 export async function apiGet(url) {
   const token = localStorage.getItem("access");
