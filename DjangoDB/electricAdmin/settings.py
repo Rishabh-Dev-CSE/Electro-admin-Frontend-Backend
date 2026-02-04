@@ -21,6 +21,7 @@ CORS_ALLOW_CREDENTIALS = False  # JWT use ho raha hai
 
 CORS_ALLOWED_ORIGINS = [
     "https://arthkarya.netlify.app",
+    "https://electro-admin-frontend-backend.onrender.com",
 ]
 
 CORS_ALLOW_METHODS = [
