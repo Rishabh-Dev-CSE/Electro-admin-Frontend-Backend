@@ -13,24 +13,15 @@ SECRET_KEY = 'django-insecure-h!=aksdg)+aqfy(ze45a^3ykmr+&p@nwli6up%42u+ly*yc7@s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    "lab.arthkarya.com",
-    "www.lab.arthkarya.com",
-    "127.0.0.1",
-    "localhost",
-    "arthkarya.netlify.app",
-    "electro-admin-frontend-backend.onrender.com",
-]
+# =======================
+# CORS CONFIG (FINAL)
+# =======================
 
+CORS_ALLOW_CREDENTIALS = False  # JWT use ho raha hai
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://lab.arthkarya.com",
-    "https://www.lab.arthkarya.com",
+CORS_ALLOWED_ORIGINS = [
     "https://arthkarya.netlify.app",
-    "https://electro-admin-frontend-backend.onrender.com",
 ]
-
-
 
 CORS_ALLOW_METHODS = [
     "GET",
@@ -46,12 +37,14 @@ CORS_ALLOW_HEADERS = [
     "accept-encoding",
     "authorization",
     "content-type",
-    "dnt",
     "origin",
     "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
 ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://arthkarya.netlify.app",
+    "https://electro-admin-frontend-backend.onrender.com",
+]
+
 
 
 # Application definition
@@ -92,7 +85,7 @@ REST_FRAMEWORK = {
     )
 }
 
-CORS_ALLOW_CREDENTIALS = True
+
 AUTH_USER_MODEL = "electricApp.CustomUser"
 
 ALLOWED_HOSTS = [
