@@ -118,7 +118,7 @@ export default function Products() {
                 >
                   <td className="p-5 flex gap-4 items-center">
                     <img
-                      src={"http://127.0.0.1:8000" + p.image}
+                      src={"https://electro-admin-frontend-backend.onrender.com" + p.image}
                       className="w-14 h-14 rounded-xl object-cover shadow-sm"
                       alt=""
                     />
