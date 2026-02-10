@@ -190,7 +190,7 @@ def get_users(request):
             "id": user.id,
             "username": user.username,
             "email": user.email,
-            "image": "https://www.lab.arthkarya.com"+user.image.url if user.image else None,
+            "image": user.image.url if user.image else None,
             "role": user.role,
             "is_active": user.is_active
         })
