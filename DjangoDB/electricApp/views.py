@@ -451,53 +451,56 @@ def delete_brand(request, pk):
 @permission_classes([IsAuthenticated])
 def add_product(request):
     if request.user.role != "admin":
-          return Response(
-            {"error": " Admin Role error"},
-            status=status.HTTP_400_BAD_REQUEST
+        return Response(
+            {"error": "Admin role required"},
+            status=status.HTTP_403_FORBIDDEN
         )
 
     data = request.data
     images = request.FILES.getlist("images")
 
     try:
-        # ---------- REQUIRED RELATIONS ----------
+        # ---------- RELATIONS ----------
         category = Category.objects.get(id=data.get("category"))
         subcategory = Subcategory.objects.get(id=data.get("subcategory"))
 
-        brand = None
-        if data.get("brand"):
-            brand = Brand.objects.get(id=data.get("brand"))
+        # ---------- SAFE VALUES ----------
+        name = data.get("name")
+        stock = int(data.get("stock", 0))
+        price = float(data.get("price", 0))
+        is_active = str(data.get("is_active")).lower() == "true"
 
         # ---------- PRODUCT ----------
         product = Product.objects.create(
-            name=data.get("name"),
-            slug=slugify(data.get("name")),
+            name=name,
+            slug=slugify(name),
             sku=data.get("sku"),
+            part_number=data.get("part_number"),
             category=category,
             subcategory=subcategory,
-            brand=brand,
-            price=data.get("price"),
-            stock=data.get("stock"),
-            is_in_stock=int(data.get("stock", 0)) > 0,
+            price=price,
+            stock=stock,
+            is_in_stock=stock > 0,
+            short_description=data.get("short_description", ""),
             description=data.get("description", ""),
-            is_active=data.get("status", "Active") == "Active",
+            datasheet_url=data.get("datasheet_url", ""),
+            is_active=is_active,
         )
 
-        # ---------- SPECIFICATIONS (OPTIONAL) ----------
+        # ---------- SPECIFICATIONS ----------
         specs_raw = data.get("specifications")
         if specs_raw:
             specs = json.loads(specs_raw)
             for spec in specs:
-                ProductSpecification.objects.create(
-                    product=product,
-                    key=spec.get("key"),
-                    value=spec.get("value")
-                )
+                if spec.get("key") and spec.get("value"):
+                    ProductSpecification.objects.create(
+                        product=product,
+                        key=spec.get("key"),
+                        value=spec.get("value"),
+                    )
 
-        # ---------- IMAGES (OPTIONAL MULTIPLE) ----------
-
+        # ---------- IMAGES ----------
         for i, img in enumerate(images):
-            # FIRST image = main product image
             if i == 0:
                 product.image = img
                 product.save(update_fields=["image"])
@@ -505,16 +508,15 @@ def add_product(request):
             ProductImage.objects.create(
                 product=product,
                 image=img,
-                is_primary=(i == 0)
+                is_primary=(i == 0),
             )
-
 
         return Response(
             {
                 "message": "Product created successfully",
-                "product_id": product.id
+                "product_id": product.id,
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
 
     except Category.DoesNotExist:
@@ -523,12 +525,12 @@ def add_product(request):
     except Subcategory.DoesNotExist:
         return Response({"error": "Invalid subcategory"}, status=400)
 
-    except Brand.DoesNotExist:
-        return Response({"error": "Invalid brand"}, status=400)
+    except ValueError:
+        return Response({"error": "Invalid price or stock"}, status=400)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-  
+
 @api_view(["GET"])
 def products_list(request):
 
