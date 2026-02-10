@@ -180,7 +180,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA FILES (Uploads)
 # =======================
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/opt/render/project/src/media"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
 # Simple JWT Tocken
