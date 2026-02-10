@@ -67,19 +67,6 @@ INSTALLED_APPS = [
     'clientSide',
 ]
 
-INSTALLED_APPS += [
-    "cloudinary",
-    "cloudinary_storage",
-]
-
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": "YOUR_CLOUD_NAME",
-    "API_KEY": "YOUR_API_KEY",
-    "API_SECRET": "YOUR_API_SECRET",
-}
-
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -190,8 +177,8 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"  # for production collectstatic
-
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # =======================
 # MEDIA FILES (Uploads)
 # =======================
