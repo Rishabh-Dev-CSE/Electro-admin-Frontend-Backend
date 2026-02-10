@@ -67,11 +67,10 @@ INSTALLED_APPS = [
     'clientSide',
 ]
 
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -175,16 +174,13 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",   # project-level static folder
 ]
-
 STATIC_ROOT = BASE_DIR / "staticfiles"  # for production collectstatic
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 # =======================
 # MEDIA FILES (Uploads)
 # =======================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = "/opt/render/project/src/media"
-
 
 
 # Simple JWT Tocken
