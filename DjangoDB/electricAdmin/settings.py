@@ -21,6 +21,7 @@ CORS_ALLOW_CREDENTIALS = False  # JWT use ho raha hai
 
 CORS_ALLOWED_ORIGINS = [
     "https://arthkarya.netlify.app",
+    "http://localhost:5173"
     "https://electro-admin-frontend-backend.onrender.com",
 ]
 
@@ -44,6 +45,7 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://arthkarya.netlify.app",
     "https://electro-admin-frontend-backend.onrender.com",
+    "http://localhost:5173"
 ]
 
 
@@ -94,6 +96,7 @@ ALLOWED_HOSTS = [
     "www.lab.arthkarya.com",
     "127.0.0.1",
     "localhost",
+    "localhost:5173"
     "arthkarya.netlify.app",
     "electro-admin-frontend-backend.onrender.com" #testing for 
 ]
