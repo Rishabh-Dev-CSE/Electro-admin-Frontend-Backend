@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiDelete, apiUpdate } from "../../utils/api";
 import SuccessErrorCard from "../../components/Success_Error_model";
-
+const BASE_IMG ="https://electro-admin-frontend-backend.onrender.com";
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [mode, setMode] = useState("");
-
   const [modal, setModal] = useState({
     open: false,
     type: "",
@@ -118,7 +117,7 @@ export default function Products() {
                 >
                   <td className="p-5 flex gap-4 items-center">
                     <img
-                      src={"https://electro-admin-frontend-backend.onrender.com" + p.image}
+                      src={BASE_IMG + p.image}
                       className="w-14 h-14 rounded-xl object-cover shadow-sm"
                       alt=""
                     />
@@ -228,7 +227,7 @@ function ViewModal({ product, onClose }) {
 
             <div className="w-full h-[320px] bg-gray-100 rounded-2xl overflow-hidden shadow-sm">
               <img
-                src={"https://www.lab.arthkarya.com" + product.image}
+                src={BASE_IMG + product.image}
                 alt=""
                 className="w-full h-full object-cover"
               />
@@ -238,7 +237,7 @@ function ViewModal({ product, onClose }) {
             <div className="flex gap-3 mt-4">
               <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                 <img
-                  src={"https://www.lab.arthkarya.com" + product.image}
+                  src={BASE_IMG + product.image}
                   alt=""
                   className="w-full h-full object-cover"
                 />

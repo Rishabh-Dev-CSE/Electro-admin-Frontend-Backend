@@ -6,7 +6,7 @@ import SuccessErrorCard from "../../components/Success_Error_model";
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-
+  const BASE_IMG = "https://electro-admin-frontend-backend.onrender.com";
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showView, setShowView] = useState(false);
@@ -243,7 +243,7 @@ export default function Users() {
                 <td className="p-2">
                   {u.image ? (
                     <img
-                      src={u.image}
+                      src={BASE_IMG+u.image}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
@@ -420,13 +420,13 @@ function UserDetails({ user, onClose }) {
         {/* Header */}
         <div className="text-center mb-5">
 
-          {user.image ?
-            <img src={user.image} className="w-14 h-14 mx-auto rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl" />
+          {/* {user.image ?
+            <img src={BASE_IMG + user.image} className="w-14 h-14 mx-auto rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl" />
             :
             <div className="w-14 h-14 mx-auto rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
               {user.username?.charAt(0).toUpperCase()}
             </div>
-          }
+          } */}
 
           <h2 className="mt-3 text-lg font-semibold text-gray-800">
             User Details

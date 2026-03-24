@@ -20,7 +20,7 @@ const EcomAdminPanel = () => {
   const location = useLocation();
   const { user, setUser } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const BASE_IMG = "https://electro-admin-frontend-backend.onrender.com"
   const menu = [
     { name: "Dashboard", path: "/admin/dashboard", icon: HomeIcon },
     { name: "Users", path: "/admin/users/list", icon: UserCircleIcon },
@@ -112,7 +112,7 @@ const EcomAdminPanel = () => {
             <div className="flex items-center gap-3 mb-4">
               {user.image ? (
                 <img
-                  src={"https://www.lab.arthkarya.com"+user.image}
+                  src={BASE_IMG+user.image}
                   alt="profile"
                   className="w-10 h-10 rounded-full border border-blue-500/40"
                 />
