@@ -543,6 +543,7 @@ def products_list(request):
                 "price": p.price,
                 "stock": p.stock,
                 "is_active": p.is_active,
+                "create_at":p.created_at,
                 "category": {
                     "id": p.category.id,
                     "name": p.category.name
