@@ -26,7 +26,7 @@ ALLOWED_HOSTS = [
     "arthkarya.netlify.app",
     "127.0.0.1:5500",
     "gleaming-toffee-e73406.netlify.app",
-    "electro-admin-frontend-backend.onrender.com" #testing for 
+    "electro-admin-frontend-backend-k4c5.onrender.com" #testing for 
 ]
 
 # =======================
@@ -41,7 +41,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",
     "http://localhost:5500",
     "http://localhost:8000",
-    "https://electro-admin-frontend-backend.onrender.com",
+    "https://electro-admin-frontend-backend-k4c5.onrender.com",
     "https://gleaming-toffee-e73406.netlify.app"
 ]
 
@@ -64,7 +64,7 @@ CORS_ALLOW_HEADERS = [
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://arthkarya.netlify.app",
-    "https://electro-admin-frontend-backend.onrender.com",
+    "https://electro-admin-frontend-backend-k4c5.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5500",
     "http://localhost:5500",
