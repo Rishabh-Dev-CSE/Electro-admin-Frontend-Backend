@@ -1,5 +1,5 @@
-// const BASE_URL = "https://electro-admin-frontend-backend.onrender.com";
-const BASE_URL = "https://electro-admin-frontend-backend.onrender.com"
+const BASE_URL = "https://electro-admin-frontend-backend-k4c5.onrender.com";
+// const BASE_URL = "http://localhost:8000"
 
 /* =========================
    HELPERS

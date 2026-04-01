@@ -6,7 +6,7 @@ import SuccessErrorCard from "../../components/Success_Error_model";
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
-  const BASE_IMG = "https://electro-admin-frontend-backend.onrender.com";
+  const BASE_IMG = "https://electro-admin-frontend-backend-k4c5.onrender.com";
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showView, setShowView] = useState(false);

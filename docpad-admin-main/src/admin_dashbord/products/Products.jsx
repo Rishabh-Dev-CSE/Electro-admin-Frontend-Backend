@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet, apiDelete, apiUpdate } from "../../utils/api";
 import SuccessErrorCard from "../../components/Success_Error_model";
-const BASE_IMG ="https://electro-admin-frontend-backend.onrender.com";
+const BASE_IMG ="https://electro-admin-frontend-backend-k4c5.onrender.com";
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");

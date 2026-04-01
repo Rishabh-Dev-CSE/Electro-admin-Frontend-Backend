@@ -20,7 +20,7 @@ const EcomAdminPanel = () => {
   const location = useLocation();
   const { user, setUser } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const BASE_IMG = "https://electro-admin-frontend-backend.onrender.com"
+  const BASE_IMG = "https://electro-admin-frontend-backend-k4c5.onrender.com"
   const menu = [
     { name: "Dashboard", path: "/admin/dashboard", icon: HomeIcon },
     { name: "Users", path: "/admin/users/list", icon: UserCircleIcon },
