@@ -205,6 +205,7 @@ def get_users(request):
 @permission_classes([IsAuthenticated])
 def add_category(request):
     name = request.data.get("name")
+    image = request.FILES.get("image")
     if request.user.role != "admin":
           return Response(
             {"error": " Admin Role error"},
@@ -216,7 +217,7 @@ def add_category(request):
             {"error": "Name required"},
             status=status.HTTP_400_BAD_REQUEST
         )
-    Category.objects.create(name=name)
+    Category.objects.create(name=name, image = image)
     return Response({"message": f"{name} Category added"})
  
 @api_view(["GET"])

@@ -51,6 +51,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    image = models.ImageField(upload_to="category_image/", default="user_image/avatar.webp", null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
