@@ -6,8 +6,8 @@ from userApp.views import *
 urlpatterns = [
     path("secret/init/", views.set_internal_cookie), # GET DATA
     path("token/refresh/", views.refresh_token_view),
-    path("login/", views.loginUser),
-    path("signup/", views.signupUser),
+    path("login/", views.loginUser), #Admin Login Only 
+    path("signup/", views.signupUser), #users
 
     path('categories/', views.categories),# GET DATA
     path("add/category/", views.add_category),

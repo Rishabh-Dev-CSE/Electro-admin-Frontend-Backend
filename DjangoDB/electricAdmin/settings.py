@@ -13,6 +13,22 @@ SECRET_KEY = 'django-insecure-h!=aksdg)+aqfy(ze45a^3ykmr+&p@nwli6up%42u+ly*yc7@s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# HOST Allowed
+ALLOWED_HOSTS = [
+    "lab.arthkarya.com",
+    "www.lab.arthkarya.com",
+    "127.0.0.1",
+     "127.0.0.1:8000",
+    "localhost",
+    "localhost:5173",
+    "localhost:5500",
+    "localhost:8000",
+    "arthkarya.netlify.app",
+    "127.0.0.1:5500",
+    "gleaming-toffee-e73406.netlify.app",
+    "electro-admin-frontend-backend.onrender.com" #testing for 
+]
+
 # =======================
 # CORS CONFIG (FINAL)
 # =======================
@@ -23,7 +39,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://arthkarya.netlify.app",
     "http://localhost:5173",
     "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://localhost:8000",
     "https://electro-admin-frontend-backend.onrender.com",
+    "https://gleaming-toffee-e73406.netlify.app"
 ]
 
 CORS_ALLOW_METHODS = [
@@ -48,6 +67,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://electro-admin-frontend-backend.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://localhost:8000",
+    "https://gleaming-toffee-e73406.netlify.app"
 ]
 
 
@@ -93,16 +115,7 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "electricApp.CustomUser"
 
-ALLOWED_HOSTS = [
-    "lab.arthkarya.com",
-    "www.lab.arthkarya.com",
-    "127.0.0.1",
-    "localhost",
-    "localhost:5173",
-    "arthkarya.netlify.app",
-    "127.0.0.1:5500",
-    "electro-admin-frontend-backend.onrender.com" #testing for 
-]
+
 
 TEMPLATES = [
     {
@@ -197,6 +210,8 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION':True,
 }
 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

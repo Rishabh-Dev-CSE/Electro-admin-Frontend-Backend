@@ -18,7 +18,7 @@ urlpatterns = [
         path("get/orders/", client_order_detail),
 
         # --------------- POST and PUT and DELETE API---------------------------
-        path("wishlist/remove/<int:wishlist_id>/", views.remove_from_wishlist), #DELETE
+        path("wishlist/remove/<int:product_id>/", views.remove_from_wishlist), #DELETE
         path("cart/update/<int:cart_id>/", views.update_cart_qty),
         path("cart/remove/<int:cart_id>/", views.remove_from_cart),
 

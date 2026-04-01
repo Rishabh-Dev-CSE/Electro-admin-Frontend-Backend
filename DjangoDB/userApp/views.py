@@ -37,7 +37,7 @@ from smtplib import SMTPException
 
 # EMAIL / ENQUIRY
 # mail_data                → Send enquiry email to admin
-
+#Logout user --------
 # ==========================================================
 
 
@@ -594,3 +594,42 @@ Enquiry:
         {"success": "Enquiry submitted successfully"},
         status=status.HTTP_200_OK
     )
+    
+    
+    
+# LogOut User 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logoutUser(request):
+    """
+    Logout user by blacklisting refresh token
+    """
+    try:
+        # Get refresh token from cookie
+        refresh_token = request.COOKIES.get('refresh_token')
+        
+        if refresh_token:
+            # Blacklist the refresh token
+            from rest_framework_simplejwt.tokens import RefreshToken
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        
+        # Create response
+        response = Response({
+            "message": "Logout successful"
+        }, status=status.HTTP_200_OK)
+        
+        # Delete refresh token cookie
+        response.delete_cookie('refresh_token')
+        
+        return response
+        
+    except Exception as e:
+        # If token is invalid, still return success
+        response = Response({
+            "message": "Logout successful"
+        }, status=status.HTTP_200_OK)
+        
+        response.delete_cookie('refresh_token')
+        return response
