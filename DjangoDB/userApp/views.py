@@ -525,6 +525,70 @@ def remove_from_cart(request, cart_id):
         {"message": "Removed from cart"},
         status=status.HTTP_200_OK
     )
+    
+    
+    
+# ==============Sale Banner =================
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def sale_banner(request):
+    banners = SaleBanner.objects.filter(is_active=True)
+
+    if not banners.exists():
+        return Response({"message": "Please create sales banner"})
+
+    data = []
+    for banner in banners:
+        data.append({
+            "id": banner.product.id,
+            "category": banner.product.category.name if banner.product.category else None,
+            "subcategory": banner.product.subcategory.name if banner.product.subcategory else None,
+            "description": banner.discription,
+            "image": banner.product.image.url if banner.product.image else None
+        })
+
+    return Response({"banners": data})
+
+
+@api_view(['POST'])
+def create_sale_banner(request):
+    product_id = request.data.get('product_id')
+    description = request.data.get('description')
+    
+    if not product_id:
+        return Response({"error": "product_id is required"}, status=400)
+
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({"error": "Invalid product"}, status=404)
+
+    #  Duplicate check
+    if SaleBanner.objects.filter(product=product, is_active=True).exists():
+        return Response({
+            "error": "Banner already exists for this product"
+        }, status=400)
+
+    banner = SaleBanner.objects.create(
+        product=product,
+        discription=description
+    )
+
+    return Response({
+        "message": "Banner created successfully",
+        "id": banner.id
+    })
+    
+@api_view(['DELETE'])
+def delete_sale_banner(request, id):
+    try:
+        banner = SaleBanner.objects.get(id=id)
+    except SaleBanner.DoesNotExist:
+        return Response({"error": "Banner not found"}, status=404)
+
+    banner.delete()
+
+    return Response({"message": "Banner deleted successfully"})
 
 #==================== Send Email ====================
 @api_view(['POST'])

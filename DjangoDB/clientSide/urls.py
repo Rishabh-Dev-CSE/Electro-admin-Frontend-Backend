@@ -16,6 +16,9 @@ urlpatterns = [
         path("get/wishlist/", views.wishlist_items),
         path("get/cart/", views.cart_items),
         path("get/orders/", client_order_detail),
+        
+        path("get/banner/", views.sale_banner),
+        
 
         # --------------- POST and PUT and DELETE API---------------------------
         path("wishlist/remove/<int:product_id>/", views.remove_from_wishlist), #DELETE
@@ -26,5 +29,9 @@ urlpatterns = [
         path("cart/add/", views.add_to_cart),
         path("reviews/submit/", views.submit_review), #client side api
         path("create/order/", create_order),# create order
-        path('contact/', views.mail_data), #send email admin   
+        path('contact/', views.mail_data), #send email admin
+        
+        path("banner/create/", views.create_sale_banner), 
+        path("banner/delete/<id>/", views.delete_sale_banner),
+        
 ]

@@ -219,3 +219,13 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.product.name} ({self.quantity})"
+    
+    
+class SaleBanner(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    discription = models.TextField()
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.product} -- {self.discription}"
+    
