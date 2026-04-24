@@ -214,13 +214,13 @@ def user_update(request, pk):
     except CustomUser.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
-    data = request.data  # ✅ PUT + FormData ke liye mandatory
+    data = request.data  # PUT + FormData ke liye mandatory
 
     user.username = data.get("username", user.username)
     user.email = data.get("email", user.email)
     user.role = data.get("role", user.role)
 
-    # ✅ FIX: is_active update
+    # FIX: is_active update
     if "is_active" in data:
         user.is_active = data.get("is_active") in ["1", "true", "True", True]
 
@@ -540,7 +540,7 @@ def sale_banner(request):
     data = []
     for banner in banners:
         data.append({
-            "id": banner.product.id,
+            "id": banner.id,
             "category": banner.product.category.name if banner.product.category else None,
             "subcategory": banner.product.subcategory.name if banner.product.subcategory else None,
             "description": banner.discription,
