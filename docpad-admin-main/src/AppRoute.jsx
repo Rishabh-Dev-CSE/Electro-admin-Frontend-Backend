@@ -37,6 +37,7 @@ import ReadyToShip from "./admin_dashbord/orders/ReadyToShip";
 import Delivered from "./admin_dashbord/orders/Delivered";
 import Cancelled from "./admin_dashbord/orders/Cancelled";
 import Shipped from "./admin_dashbord/orders/Shipped";
+import Banner from "./admin_dashbord/banner_create/Banner";
 
 export default function AppRoute() {
   return (
@@ -70,6 +71,8 @@ export default function AppRoute() {
           {/* Products */}
           <Route path="products" element={<Products />} />
           <Route path="products/add" element={<AddProduct />} />
+          {/* banner */}
+          <Route path="sales/banner" element={<Banner />} />
 
           {/* Orders */}
           {/* ================= ORDERS (NESTED LIKE SETTINGS) ================= */}

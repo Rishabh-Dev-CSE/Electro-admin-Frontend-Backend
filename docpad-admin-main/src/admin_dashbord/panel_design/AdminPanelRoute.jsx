@@ -29,7 +29,7 @@ const EcomAdminPanel = () => {
     { name: "Orders", path: "/admin/orders", icon: DocumentTextIcon },
     { name: "Reports", path: "/admin/reports", icon: DocumentTextIcon },
     { name: "Reviews", path: "/admin/reviews", icon: UsersIcon },
-    // { name: "Settings", path: "/admin/settings", icon: Cog6ToothIcon },
+    { name: "Sales Banner", path: "/admin/sales/banner", icon: Cog6ToothIcon },
   ];
 
   const active =
