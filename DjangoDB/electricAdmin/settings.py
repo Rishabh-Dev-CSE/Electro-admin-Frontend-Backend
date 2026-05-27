@@ -23,7 +23,7 @@ ALLOWED_HOSTS = [
     "localhost:5173",
     "localhost:5500",
     "localhost:8000",
-    "arthkarya.netlify.app",
+    "arthkaryaa.netlify.app",
     "127.0.0.1:5500",
     "gleaming-toffee-e73406.netlify.app",
     "arthkaryaweb.netlify.app",
@@ -37,7 +37,7 @@ ALLOWED_HOSTS = [
 CORS_ALLOW_CREDENTIALS = False  # JWT use ho raha hai
 
 CORS_ALLOWED_ORIGINS = [
-    "https://arthkarya.netlify.app",
+    "https://arthkaryaa.netlify.app",
     "https://arthkaryaweb.netlify.app",
     "http://localhost:5173",
     "http://127.0.0.1:5500",
@@ -65,7 +65,7 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://arthkarya.netlify.app",
+    "https://arthkaryaa.netlify.app",
     "https://arthkaryaweb.netlify.app",
     "https://electro-admin-frontend-backend-k4c5.onrender.com",
     "http://localhost:5173",
